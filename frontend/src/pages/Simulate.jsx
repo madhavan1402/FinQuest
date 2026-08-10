@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 // Simulate.jsx — Premium Financial Simulation UI
 import { useState } from 'react';
 import { useAuth }  from '../context/AuthContext';
@@ -9,6 +10,18 @@ const TABS = [
   { id: 'Stock',  icon: '📈', label: 'Stock',  desc: 'Virtual stock trading' },
   { id: 'Tax',    icon: '🧾', label: 'Tax',    desc: 'Income tax calculator' },
 ];
+=======
+// Simulate.jsx
+// Three financial simulations: Budget, Stock, Tax.
+// Each calls the corresponding backend API and displays the result + XP earned.
+
+import { useState } from 'react';
+import { useAuth }  from '../context/AuthContext';
+import { runBudget, runStock, runTax } from '../api/endpoints';
+
+// Tab definitions
+const TABS = ['Budget', 'Stock', 'Tax'];
+>>>>>>> 348c16528166ec8e809d2b70a1061f3f9b6aa577
 
 export default function Simulate() {
   const { user, saveUser } = useAuth();
@@ -16,6 +29,7 @@ export default function Simulate() {
   const [result,    setResult]    = useState(null);
   const [loading,   setLoading]   = useState(false);
   const [error,     setError]     = useState('');
+<<<<<<< HEAD
   const [budget, setBudget]       = useState({ income: '', expenses: '' });
   const [stockDecisions, setStockDecisions] = useState('BUY,BUY,SELL');
   const [salary, setSalary]       = useState('');
@@ -23,6 +37,26 @@ export default function Simulate() {
 
   const handleRun = async () => {
     setLoading(true); setError(''); setResult(null);
+=======
+
+  // ── Budget form state ───────────────────────────────────────────────────────
+  const [budget, setBudget] = useState({ income: '', expenses: '' });
+
+  // ── Stock form state ────────────────────────────────────────────────────────
+  // decisions is a comma-separated string like "BUY,BUY,SELL"
+  const [stockDecisions, setStockDecisions] = useState('BUY,BUY,SELL');
+
+  // ── Tax form state ──────────────────────────────────────────────────────────
+  const [salary, setSalary] = useState('');
+
+  const userId = user?.userId ?? user?.id;
+
+  const handleRun = async () => {
+    setLoading(true);
+    setError('');
+    setResult(null);
+
+>>>>>>> 348c16528166ec8e809d2b70a1061f3f9b6aa577
     try {
       let res;
       if (activeTab === 'Budget') {
@@ -33,8 +67,17 @@ export default function Simulate() {
       } else {
         res = await runTax({ userId, salary: Number(salary) });
       }
+<<<<<<< HEAD
       setResult(res.data);
       if (res.data.xp !== undefined) saveUser({ ...user, xp: res.data.xp, level: res.data.level });
+=======
+
+      setResult(res.data);
+      // Sync XP + level into Navbar pill
+      if (res.data.xp !== undefined) {
+        saveUser({ ...user, xp: res.data.xp, level: res.data.level });
+      }
+>>>>>>> 348c16528166ec8e809d2b70a1061f3f9b6aa577
     } catch {
       setError('Simulation failed. Make sure the backend is running.');
     } finally {
@@ -42,6 +85,7 @@ export default function Simulate() {
     }
   };
 
+<<<<<<< HEAD
   const scoreColor = (score) => {
     if (score >= 80) return 'text-emerald-400';
     if (score >= 60) return 'text-amber-400';
@@ -52,11 +96,18 @@ export default function Simulate() {
     <div className="max-w-2xl mx-auto px-4 py-8">
 
       <div className="mb-6 fade-slide-up">
+=======
+  return (
+    <div className="max-w-2xl mx-auto px-4 py-10">
+
+      <div className="mb-8">
+>>>>>>> 348c16528166ec8e809d2b70a1061f3f9b6aa577
         <h1 className="text-3xl font-bold text-white">🧮 Simulations</h1>
         <p className="text-slate-400 mt-1">Run financial simulations and earn XP</p>
       </div>
 
       {/* Tab switcher */}
+<<<<<<< HEAD
       <div className="grid grid-cols-3 gap-2 mb-6 fade-slide-up">
         {TABS.map(tab => (
           <button
@@ -73,11 +124,22 @@ export default function Simulate() {
             <div className="text-xl mb-1">{tab.icon}</div>
             <div className="font-bold text-sm">{tab.label}</div>
             <div className="text-xs opacity-60 mt-0.5">{tab.desc}</div>
+=======
+      <div className="flex gap-2 mb-6">
+        {TABS.map(tab => (
+          <button key={tab} onClick={() => { setActiveTab(tab); setResult(null); setError(''); }}
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors
+              ${activeTab === tab
+                ? 'bg-indigo-600 text-white'
+                : 'bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700'}`}>
+            {tab === 'Budget' ? '💰' : tab === 'Stock' ? '📈' : '🧾'} {tab}
+>>>>>>> 348c16528166ec8e809d2b70a1061f3f9b6aa577
           </button>
         ))}
       </div>
 
       {/* Form card */}
+<<<<<<< HEAD
       <div className="bg-slate-800/90 border border-slate-700/80 rounded-2xl p-6 mb-6 fade-slide-up">
 
         {activeTab === 'Budget' && (
@@ -96,16 +158,41 @@ export default function Simulate() {
                              text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500
                              transition-colors text-sm"
                 />
+=======
+      <div className="bg-slate-800 border border-slate-700 rounded-xl p-6 mb-6">
+
+        {/* Budget form */}
+        {activeTab === 'Budget' && (
+          <div className="space-y-4">
+            <p className="text-slate-300 text-sm mb-2">
+              Enter your monthly income and expenses to calculate savings rate.
+            </p>
+            {[
+              { label: 'Monthly Income (₹)', key: 'income', placeholder: '50000' },
+              { label: 'Monthly Expenses (₹)', key: 'expenses', placeholder: '35000' },
+            ].map(({ label, key, placeholder }) => (
+              <div key={key}>
+                <label className="block text-slate-400 text-sm mb-1">{label}</label>
+                <input type="number" placeholder={placeholder} value={budget[key]}
+                  onChange={e => setBudget({ ...budget, [key]: e.target.value })}
+                  className="w-full bg-slate-900 border border-slate-600 rounded-lg px-4 py-2.5
+                             text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500" />
+>>>>>>> 348c16528166ec8e809d2b70a1061f3f9b6aa577
               </div>
             ))}
           </div>
         )}
 
+<<<<<<< HEAD
+=======
+        {/* Stock form */}
+>>>>>>> 348c16528166ec8e809d2b70a1061f3f9b6aa577
         {activeTab === 'Stock' && (
           <div>
             <p className="text-slate-300 text-sm mb-4">
               Enter BUY/SELL decisions separated by commas. Start with ₹1,00,000 virtual money.
             </p>
+<<<<<<< HEAD
             <div className="bg-slate-900/60 border border-slate-700/60 rounded-xl p-4 mb-4 text-xs text-slate-400 space-y-1">
               <p>📈 <strong className="text-slate-300">BUY</strong> — spend ₹10,000 for 10 units</p>
               <p>📉 <strong className="text-slate-300">SELL</strong> — sell all units at ₹1,000/unit</p>
@@ -153,11 +240,52 @@ export default function Simulate() {
               Running simulation…
             </span>
           ) : `▶ Run ${activeTab} Simulation`}
+=======
+            <label className="block text-slate-400 text-sm mb-1">
+              Decisions (e.g. BUY,BUY,SELL,BUY,SELL)
+            </label>
+            <input type="text" value={stockDecisions}
+              onChange={e => setStockDecisions(e.target.value)}
+              className="w-full bg-slate-900 border border-slate-600 rounded-lg px-4 py-2.5
+                         text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500" />
+            <p className="text-slate-500 text-xs mt-2">
+              BUY = spend ₹10,000 for 10 units · SELL = sell all units at ₹1,000/unit
+            </p>
+          </div>
+        )}
+
+        {/* Tax form */}
+        {activeTab === 'Tax' && (
+          <div>
+            <p className="text-slate-300 text-sm mb-4">
+              Enter your annual salary to calculate income tax under the old regime.
+            </p>
+            <label className="block text-slate-400 text-sm mb-1">Annual Salary (₹)</label>
+            <input type="number" placeholder="800000" value={salary}
+              onChange={e => setSalary(e.target.value)}
+              className="w-full bg-slate-900 border border-slate-600 rounded-lg px-4 py-2.5
+                         text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500" />
+          </div>
+        )}
+
+        {error && <p className="text-red-400 text-sm mt-4">{error}</p>}
+
+        <button onClick={handleRun} disabled={loading}
+          className="mt-6 w-full bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50
+                     text-white font-semibold py-3 rounded-xl transition-colors">
+          {loading ? (
+            <span className="flex items-center justify-center gap-2">
+              <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              Running…
+            </span>
+          ) : `Run ${activeTab} Simulation`}
+>>>>>>> 348c16528166ec8e809d2b70a1061f3f9b6aa577
         </button>
       </div>
 
       {/* Result card */}
       {result && (
+<<<<<<< HEAD
         <div
           className="bg-slate-800/90 border border-emerald-500/40 rounded-2xl p-6"
           style={{ animation: 'fadeSlideUp 0.4s ease' }}
@@ -194,6 +322,32 @@ export default function Simulate() {
           {result.leveledUp && (
             <div className="mt-4 bg-amber-900/40 border border-amber-500/40 text-amber-300 text-sm font-bold rounded-xl px-4 py-2.5 text-center"
               style={{ animation: 'badge-pop 0.5s ease' }}>
+=======
+        <div className="bg-slate-800 border border-emerald-500/40 rounded-xl p-6">
+          <h2 className="text-white font-semibold mb-4">📊 Result</h2>
+          <p className="text-slate-300 text-sm mb-4 leading-relaxed">{result.result}</p>
+          <div className="flex gap-3 flex-wrap">
+            <div className="bg-slate-900 rounded-lg px-4 py-2.5">
+              <p className="text-slate-400 text-xs mb-0.5">Score</p>
+              <p className="text-emerald-400 font-bold">{result.score} / 100</p>
+            </div>
+            {result.xpEarned !== undefined && (
+              <div className="bg-slate-900 rounded-lg px-4 py-2.5">
+                <p className="text-slate-400 text-xs mb-0.5">XP Earned</p>
+                <p className="text-indigo-400 font-bold">+{result.xpEarned}</p>
+              </div>
+            )}
+            {result.level !== undefined && (
+              <div className="bg-slate-900 rounded-lg px-4 py-2.5">
+                <p className="text-slate-400 text-xs mb-0.5">Level</p>
+                <p className="text-amber-400 font-bold">Lv. {result.level}</p>
+              </div>
+            )}
+          </div>
+          {result.leveledUp && (
+            <div className="mt-4 bg-amber-900/40 border border-amber-500/40
+                            text-amber-300 text-sm font-semibold rounded-lg px-4 py-2">
+>>>>>>> 348c16528166ec8e809d2b70a1061f3f9b6aa577
               🎊 Level Up! You are now Level {result.level}!
             </div>
           )}

@@ -1,5 +1,6 @@
 @import "tailwindcss";
 
+<<<<<<< HEAD
 /* ══════════════════════════════════════════════════════════
    FinQuest Design System — CSS Variables
 ══════════════════════════════════════════════════════════ */
@@ -140,10 +141,44 @@ body {
 /* ══════════════════════════════════════════════════════════
    XP / Progress Bars
 ══════════════════════════════════════════════════════════ */
+=======
+/* ── Custom CSS variables for the FinQuest game theme ── */
+:root {
+  --color-primary:   #6366f1; /* indigo  */
+  --color-secondary: #8b5cf6; /* violet  */
+  --color-accent:    #f59e0b; /* amber   */
+  --color-success:   #10b981; /* emerald */
+  --color-danger:    #ef4444; /* red     */
+}
+
+/* Smooth page transitions */
+* {
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+body {
+  background-color: #0f172a; /* slate-900 — dark game background */
+  color: #f1f5f9;
+  font-family: 'Inter', system-ui, sans-serif;
+  min-height: 100vh;
+}
+
+/* Glowing card effect used on stat and level cards */
+.glow-card {
+  box-shadow: 0 0 20px rgba(99, 102, 241, 0.15);
+}
+
+.glow-card:hover {
+  box-shadow: 0 0 30px rgba(99, 102, 241, 0.35);
+}
+
+/* XP bar gradient */
+>>>>>>> 348c16528166ec8e809d2b70a1061f3f9b6aa577
 .xp-bar {
   background: linear-gradient(90deg, #6366f1, #8b5cf6, #f59e0b);
 }
 
+<<<<<<< HEAD
 .progress-track {
   background: rgba(51, 65, 85, 0.8);
   border-radius: 99px;
@@ -409,4 +444,20 @@ body {
 :focus-visible {
   outline: 2px solid var(--color-primary);
   outline-offset: 2px;
+=======
+/* Animated pulse for new badge */
+@keyframes badge-pop {
+  0%   { transform: scale(0.8); opacity: 0; }
+  70%  { transform: scale(1.1); }
+  100% { transform: scale(1);   opacity: 1; }
+}
+.badge-pop {
+  animation: badge-pop 0.4s ease forwards;
+}
+
+/* Toast slide-down from top */
+@keyframes fadeSlideDown {
+  from { opacity: 0; transform: translateX(-50%) translateY(-16px); }
+  to   { opacity: 1; transform: translateX(-50%) translateY(0);     }
+>>>>>>> 348c16528166ec8e809d2b70a1061f3f9b6aa577
 }

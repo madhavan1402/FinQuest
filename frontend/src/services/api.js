@@ -10,6 +10,7 @@ const api = axios.create({
   timeout: 10000,
 });
 
+<<<<<<< HEAD
 // Attach the JWT access token to every request.
 // After login the AuthContext stores the full AuthResponse (which includes
 // accessToken) under the localStorage key 'fq_user'. Read it back here and
@@ -108,4 +109,6 @@ api.interceptors.response.use(
   }
 );
 
+=======
+>>>>>>> 348c16528166ec8e809d2b70a1061f3f9b6aa577
 export default api;

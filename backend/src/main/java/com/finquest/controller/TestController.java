@@ -1,6 +1,10 @@
 package com.finquest.controller;
 
+<<<<<<< HEAD
 import com.finquest.dto.LeaderboardEntryDto;
+=======
+import com.finquest.model.User;
+>>>>>>> 348c16528166ec8e809d2b70a1061f3f9b6aa577
 import com.finquest.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -30,11 +34,18 @@ public class TestController {
         return userService.seedTestUser();
     }
 
+<<<<<<< HEAD
     // Reads all users from MySQL — confirms both write and read paths.
     // Returns safe LeaderboardEntryDto objects — never raw User entities,
     // which would leak the BCrypt password hash to any client.
     @GetMapping("/users")
     public List<LeaderboardEntryDto> getAllUsers() {
         return userService.getLeaderboard();
+=======
+    // Reads all users from MySQL — confirms both write and read paths
+    @GetMapping("/users")
+    public List<User> getAllUsers() {
+        return userService.getAllUsers();
+>>>>>>> 348c16528166ec8e809d2b70a1061f3f9b6aa577
     }
 }
