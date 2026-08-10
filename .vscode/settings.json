@@ -1,0 +1,8 @@
+{
+  "java.configuration.updateBuildConfiguration": "automatic",
+  "java.project.lombok.enabled": true,
+  "java.format.settings.profile": "GoogleStyle",
+  "java.configuration.maven.userSettings": "C:\\Users\\maddy\\.m2\\settings.xml",
+  "java.import.generatesMetadataFilesAtProjectRoot": true,
+  "java.compile.nullAnalysis.mode": "automatic"
+}

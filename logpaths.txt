@@ -1,0 +1,2 @@
+C:\Users\maddy\Downloads\Fin_Quest-main\Fin_Quest-main\FinQuest-main\backend\backend_startup.log | 08/09/2026 11:58:13 | 101973
+C:\Users\maddy\Downloads\Fin_Quest-main\Fin_Quest-main\FinQuest-main\backend\verify_build.log | 08/07/2026 12:38:56 | 3862

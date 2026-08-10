@@ -1,0 +1,1 @@
+export default function ConfettiAnimation() { return <div className="confetti-layer" aria-hidden="true">{Array.from({ length: 36 }, (_, i) => <i key={i} style={{ left: `${i * 2.8}%`, animationDelay: `${(i % 9) * .06}s` }} />)}</div>; }

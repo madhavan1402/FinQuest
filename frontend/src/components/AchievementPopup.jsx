@@ -1,0 +1,1 @@
+export default function AchievementPopup({ reward, onClose }) { return <div className="achievement-popup"><span>🏆</span><div><strong>Congratulations!</strong><p>+{reward.xpEarned ?? reward.xp ?? 0} XP · +{reward.coinsEarned ?? reward.coins ?? 0} FinQuest Coin</p><p>Level {reward.currentLevel ?? 1}</p></div><button onClick={onClose}>×</button></div>; }
