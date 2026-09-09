@@ -59,3 +59,8 @@ export const getAiPrediction = (payload) => api.post('/ai/predict', payload);
 export const getAssessmentQuestions = ()        => api.get('/assessment/questions');
 export const submitAssessment        = (payload) => api.post('/assessment/submit', payload);
 export const getAssessmentResult     = ()        => api.get('/assessment/result');
+
+// ── AI Finance Brain / 3D Mentor (Phase 5) ────────────────────────────────────
+export const mentorChat       = (payload) => api.post('/mentor/chat', payload);
+export const getMentorHealth  = ()        => api.get('/mentor/health');
+

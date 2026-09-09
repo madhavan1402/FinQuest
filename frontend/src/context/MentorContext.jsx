@@ -2,10 +2,13 @@
 // Global state and event dispatcher for the 3D Finance Mentor.
 // Persists user preferences (gender, voice, mute, minimized) in localStorage,
 // coordinates TTS audio with avatar animation, and exposes high-level mentor events.
+// Phase 5: Uses AiFinanceBrainProvider with silent deterministic fallback,
+// race condition / request versioning protection, and isThinking avatar state.
 
 import { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { useMentorTTS } from '../hooks/useMentorTTS';
-import { mentorProvider } from '../services/mentorProvider';
+import { aiFinanceBrainProvider } from '../services/AiFinanceBrainProvider';
+import { mentorProvider as deterministicFallback } from '../services/mentorProvider';
 
 const MENTOR_SETTINGS_KEY = 'fq_mentor_settings';
 const VOICE_NAVBAR_KEY = 'fq_voice_enabled';
@@ -36,7 +39,6 @@ export function MentorProvider({ children }) {
     }
   });
 
-
   const gender = settings.gender || 'male';
   const mentorName = gender === 'female' ? 'Maya' : 'Alex';
   const muted = Boolean(settings.muted);
@@ -48,7 +50,11 @@ export function MentorProvider({ children }) {
   const [emotion, setEmotion] = useState('idle');
   const [currentMessage, setCurrentMessage] = useState('');
   const [isSpeaking, setIsSpeaking] = useState(false);
+  const [isThinking, setIsThinking] = useState(false);
+
   const previousEmotionRef = useRef('idle');
+  // Race condition protection: monotonically increasing request version ID
+  const latestRequestIdRef = useRef(0);
 
   // TTS Hook
   const { speak: ttsSpeak, cancel: ttsCancel, voices, supported: ttsSupported } = useMentorTTS();
@@ -85,7 +91,6 @@ export function MentorProvider({ children }) {
   /**
    * Internal speech and dialogue executor.
    */
-
   const executeDialogue = useCallback((message, targetEmotion = 'idle', autoSpeak = true) => {
     if (!message) return;
     setCurrentMessage(message);
@@ -114,46 +119,113 @@ export function MentorProvider({ children }) {
     }
   }, [muted, ttsSupported, ttsSpeak, gender, preferredVoice]);
 
-  // ── High-Level Mentor Events ──────────────────────────────────────────────
+  /**
+   * Dispatches an asynchronous request to the AI Finance Brain provider.
+   * Manages `isThinking` avatar state, checks monotonic request IDs to prevent race conditions,
+   * and triggers speech/dialogue execution once resolved.
+   */
+  const dispatchAiRequest = useCallback(async (asyncFn, syncFallbackFn, targetEmotion = 'idle') => {
+    const requestId = ++latestRequestIdRef.current;
+    setIsThinking(true);
+    setEmotion('thinking');
 
-  const greet = useCallback((userName) => {
-    const { message, emotion: emo } = mentorProvider.getGreeting(userName);
-    executeDialogue(message, emo);
+    try {
+      const result = await asyncFn();
+      // Drop response if a newer request has started
+      if (requestId !== latestRequestIdRef.current) return;
+
+      setIsThinking(false);
+      if (result && result.message) {
+        executeDialogue(result.message, result.emotion || targetEmotion);
+      } else if (syncFallbackFn) {
+        const fb = syncFallbackFn();
+        executeDialogue(fb.message, fb.emotion || targetEmotion);
+      }
+    } catch {
+      if (requestId !== latestRequestIdRef.current) return;
+      setIsThinking(false);
+      if (syncFallbackFn) {
+        const fb = syncFallbackFn();
+        executeDialogue(fb.message, fb.emotion || targetEmotion);
+      }
+    }
   }, [executeDialogue]);
 
+  // ── High-Level Mentor Events (AI-Powered with Fallback) ───────────────────
+
+  const greet = useCallback((userName) => {
+    dispatchAiRequest(
+      () => aiFinanceBrainProvider.getGreeting(userName),
+      () => deterministicFallback.getGreeting(userName),
+      'happy'
+    );
+  }, [dispatchAiRequest]);
+
   const say = useCallback((message, emo = 'talking', autoSpeak = true) => {
+    // Immediate direct utterance without network call
+    latestRequestIdRef.current++;
+    setIsThinking(false);
     executeDialogue(message, emo, autoSpeak);
   }, [executeDialogue]);
 
   const react = useCallback((emo, customMessage) => {
-    const { message, emotion: resultEmo } = mentorProvider.getReaction(emo, customMessage);
-    executeDialogue(message, resultEmo);
-  }, [executeDialogue]);
+    dispatchAiRequest(
+      () => aiFinanceBrainProvider.getReaction(emo, customMessage),
+      () => deterministicFallback.getReaction(emo, customMessage),
+      emo || 'talking'
+    );
+  }, [dispatchAiRequest]);
 
   const celebrate = useCallback((rewardTitle, xp) => {
-    const { message, emotion: emo } = mentorProvider.getCelebration(rewardTitle, xp);
-    executeDialogue(message, emo);
-  }, [executeDialogue]);
+    dispatchAiRequest(
+      () => aiFinanceBrainProvider.getCelebration(rewardTitle, xp),
+      () => deterministicFallback.getCelebration(rewardTitle, xp),
+      'celebrating'
+    );
+  }, [dispatchAiRequest]);
 
   const encourage = useCallback((levelTitle) => {
-    const { message, emotion: emo } = mentorProvider.getEncouragement(levelTitle);
-    executeDialogue(message, emo);
-  }, [executeDialogue]);
+    dispatchAiRequest(
+      () => aiFinanceBrainProvider.getEncouragement(levelTitle),
+      () => deterministicFallback.getEncouragement(levelTitle),
+      'encouraging'
+    );
+  }, [dispatchAiRequest]);
 
   const think = useCallback((topic) => {
-    const { message, emotion: emo } = mentorProvider.getThinking(topic);
-    executeDialogue(message, emo);
-  }, [executeDialogue]);
+    dispatchAiRequest(
+      () => aiFinanceBrainProvider.getThinking(topic),
+      () => deterministicFallback.getThinking(topic),
+      'thinking'
+    );
+  }, [dispatchAiRequest]);
 
   const explain = useCallback((tip) => {
-    const { message, emotion: emo } = mentorProvider.getFinancialTip(tip);
-    executeDialogue(message, emo);
-  }, [executeDialogue]);
+    dispatchAiRequest(
+      () => aiFinanceBrainProvider.getFinancialTip(tip),
+      () => deterministicFallback.getFinancialTip(tip),
+      'talking'
+    );
+  }, [dispatchAiRequest]);
 
   const recommendNext = useCallback((levelNumber, title, reason) => {
-    const { message, emotion: emo } = mentorProvider.getRecommendation(levelNumber, title, reason);
-    executeDialogue(message, emo);
-  }, [executeDialogue]);
+    dispatchAiRequest(
+      () => aiFinanceBrainProvider.getRecommendation(levelNumber, title, reason),
+      () => deterministicFallback.getRecommendation(levelNumber, title, reason),
+      'encouraging'
+    );
+  }, [dispatchAiRequest]);
+
+  const chat = useCallback((userQuery, pageContext) => {
+    dispatchAiRequest(
+      () => aiFinanceBrainProvider.chat(userQuery, pageContext),
+      () => ({
+        message: 'Every thoughtful financial decision moves you closer to long-term wealth building.',
+        emotion: 'talking',
+      }),
+      'talking'
+    );
+  }, [dispatchAiRequest]);
 
   const replaySpeech = useCallback(() => {
     if (currentMessage) {
@@ -164,6 +236,7 @@ export function MentorProvider({ children }) {
   const dismissMessage = useCallback(() => {
     ttsCancel();
     setIsSpeaking(false);
+    setIsThinking(false);
     setCurrentMessage('');
     setEmotion('idle');
   }, [ttsCancel]);
@@ -204,6 +277,7 @@ export function MentorProvider({ children }) {
     emotion,
     currentMessage,
     isSpeaking,
+    isThinking,
 
     // Controls
     setVisible,
@@ -215,7 +289,6 @@ export function MentorProvider({ children }) {
     dismissDialogue: dismissMessage,
     replaySpeech,
 
-
     // High-level event triggers
     greet,
     say,
@@ -225,6 +298,7 @@ export function MentorProvider({ children }) {
     think,
     explain,
     recommendNext,
+    chat,
   };
 
   return (

@@ -2,3 +2,7 @@ backend/target/
 backend/target_test-classes/
 ai-engine/__pycache__/
 frontend/node_modules/
+backend/src/main/resources/application-local.properties
+.env
+.env.local
+*.env
