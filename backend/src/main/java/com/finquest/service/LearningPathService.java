@@ -160,7 +160,15 @@ public class LearningPathService {
 
     // ── Public API ──────────────────────────────────────────────────────────
 
-    /** Full tiered learning path with user progress + summary. */
+    public static int getStartingLevelForLiteracy(String literacyLevel) {
+        if (literacyLevel == null) return 1;
+        String normalized = literacyLevel.trim().toUpperCase();
+        if ("ADVANCED".equals(normalized)) return 25;
+        if ("INTERMEDIATE".equals(normalized)) return 13;
+        return 1; // BEGINNER
+    }
+
+    /** Full tiered learning path with user progress + summary + recommendation. */
     @Transactional
     public TieredLearningPathDto getPath(Long userId) {
         User user = requireUser(userId);
@@ -171,11 +179,14 @@ public class LearningPathService {
 
         eduLevel(user, entries); // recompute statuses based on completion
 
+        LearningRecommendationDto rec = computeRecommendation(user, all, entries);
+
         List<LevelDto> beginner = new ArrayList<>();
         List<LevelDto> intermediate = new ArrayList<>();
         List<LevelDto> advanced = new ArrayList<>();
         for (LearningModule m : all) {
-            LevelDto dto = toLevelDto(m, entries.get(m.getId()));
+            String adaptDiff = determineAdaptiveDifficulty(user, m, entries.get(m.getId()));
+            LevelDto dto = toLevelDto(m, entries.get(m.getId()), rec.getRecommendedLevelNumber(), adaptDiff);
             switch (m.getTier()) {
                 case BEGINNER -> beginner.add(dto);
                 case INTERMEDIATE -> intermediate.add(dto);
@@ -190,7 +201,27 @@ public class LearningPathService {
         );
 
         long completed = entries.values().stream().filter(UserProgress::isCompleted).count();
-        return new TieredLearningPathDto(tiers, summary(user, completed, all.size()));
+        LearningPathSummaryDto summaryDto = summary(user, completed, all.size());
+
+        return new TieredLearningPathDto(
+                tiers, summaryDto,
+                rec.getRecommendedLevelNumber(),
+                rec.getRecommendedModuleTitle(),
+                rec.getRecommendationReason(),
+                rec.getAdaptiveDifficulty(),
+                rec.isPathMastered()
+        );
+    }
+
+    /** Standalone recommendation endpoint helper. */
+    @Transactional(readOnly = true)
+    public LearningRecommendationDto getRecommendation(Long userId) {
+        User user = requireUser(userId);
+        List<LearningModule> all = modules.findByActiveTrueOrderBySequenceNumberAsc();
+        Map<Long, UserProgress> entries = new HashMap<>();
+        progress.findByUserId(userId).forEach(p -> entries.put(p.getLearningModule().getId(), p));
+        eduLevel(user, entries);
+        return computeRecommendation(user, all, entries);
     }
 
     /** Detailed info for a single level. */
@@ -212,20 +243,188 @@ public class LearningPathService {
                 module.getEstimatedMinutes(), p.getStatus(), p.getAttempts(), p.getBestScore());
     }
 
-    /** Secure quiz questions — correctAnswer is NEVER returned. */
+    /** Secure adaptive quiz questions — correctAnswer is NEVER returned. */
     @Transactional(readOnly = true)
     public List<QuizQuestionDto> getLevelQuiz(Long userId, int levelNumber) {
-        requireUser(userId);
+        User user = requireUser(userId);
+        LearningModule module = modules.findByActiveTrueOrderBySequenceNumberAsc().stream()
+                .filter(m -> m.getSequenceNumber() == levelNumber)
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("Level not found: " + levelNumber));
+
+        UserProgress p = progress.findByUserIdAndLearningModuleId(user.getId(), module.getId()).orElse(null);
+        String adaptiveMode = determineAdaptiveDifficulty(user, module, p);
+
         List<QuizQuestion> questions = quizRepository.findBylevelAndActiveTrue(levelNumber);
+        if (questions.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        // Sort / prioritize questions based on adaptive difficulty mode
+        List<QuizQuestion> adaptedQuestions = new ArrayList<>(questions);
+        adaptedQuestions.sort((q1, q2) -> {
+            int rank1 = rankDifficulty(q1.getDifficulty(), adaptiveMode);
+            int rank2 = rankDifficulty(q2.getDifficulty(), adaptiveMode);
+            return Integer.compare(rank1, rank2);
+        });
+
         List<QuizQuestionDto> result = new ArrayList<>();
-        for (int i = 0; i < questions.size(); i++) {
-            QuizQuestion q = questions.get(i);
+        for (int i = 0; i < adaptedQuestions.size(); i++) {
+            QuizQuestion q = adaptedQuestions.get(i);
             result.add(new QuizQuestionDto(
                     q.getId(), i + 1, q.getQuestion(),
                     List.of(q.getOptionA(), q.getOptionB(), q.getOptionC(), q.getOptionD()),
-                    q.getDifficulty(), q.getTopic()));
+                    q.getDifficulty(), q.getTopic(), adaptiveMode));
         }
         return result;
+    }
+
+    public String determineAdaptiveDifficulty(User user, LearningModule module, UserProgress p) {
+        int lastScore = p != null ? p.getLastScore() : 0;
+        int attempts = p != null ? p.getAttempts() : 0;
+        boolean completed = p != null && p.isCompleted();
+
+        // REINFORCEMENT: lastScore < 60% OR repeated failures
+        if (attempts > 0 && lastScore < 60) {
+            return "REINFORCEMENT";
+        }
+        if (attempts >= 2 && !completed) {
+            return "REINFORCEMENT";
+        }
+
+        // CHALLENGE: lastScore >= 85% OR (first attempt by ADVANCED user on a lower-tier module)
+        if (attempts > 0 && lastScore >= 85) {
+            return "CHALLENGE";
+        }
+        String literacy = user.getLiteracyLevel() != null ? user.getLiteracyLevel().trim().toUpperCase() : "BEGINNER";
+        if (attempts == 0 && "ADVANCED".equals(literacy) && module != null && module.getSequenceNumber() < 25) {
+            return "CHALLENGE";
+        }
+
+        // STANDARD: normal/balanced
+        return "STANDARD";
+    }
+
+    private int rankDifficulty(Difficulty difficulty, String adaptiveMode) {
+        if (difficulty == null) return 2;
+        if ("REINFORCEMENT".equals(adaptiveMode)) {
+            // Prioritize EASY, then MEDIUM, then HARD
+            return switch (difficulty) {
+                case EASY -> 1;
+                case MEDIUM -> 2;
+                case HARD -> 3;
+            };
+        } else if ("CHALLENGE".equals(adaptiveMode)) {
+            // Prioritize HARD, then MEDIUM, then EASY
+            return switch (difficulty) {
+                case HARD -> 1;
+                case MEDIUM -> 2;
+                case EASY -> 3;
+            };
+        } else {
+            // STANDARD: balanced / default (EASY, MEDIUM, HARD)
+            return switch (difficulty) {
+                case EASY -> 1;
+                case MEDIUM -> 2;
+                case HARD -> 3;
+            };
+        }
+    }
+
+    public LearningRecommendationDto computeRecommendation(
+            User user, List<LearningModule> all, Map<Long, UserProgress> entries) {
+        int startingLevel = getStartingLevelForLiteracy(user.getLiteracyLevel());
+        String riskProfile = user.getRiskProfile() != null ? user.getRiskProfile() : "Moderate";
+
+        // Priority A: In-progress module at or after starting level
+        LearningModule targetModule = null;
+        for (LearningModule m : all) {
+            if (m.getSequenceNumber() >= startingLevel) {
+                UserProgress p = entries.get(m.getId());
+                if (p != null && p.getStatus() == LevelStatus.IN_PROGRESS && !p.isCompleted()) {
+                    targetModule = m;
+                    break;
+                }
+            }
+        }
+
+        // Priority B: Lowest incomplete unlocked module at or after starting level
+        if (targetModule == null) {
+            for (LearningModule m : all) {
+                if (m.getSequenceNumber() >= startingLevel) {
+                    UserProgress p = entries.get(m.getId());
+                    if (p != null && p.isUnlocked() && !p.isCompleted()) {
+                        targetModule = m;
+                        break;
+                    }
+                }
+            }
+        }
+
+        // Priority C: Check if all modules from starting level to 36 are complete
+        if (targetModule == null) {
+            boolean allCompleted = true;
+            for (LearningModule m : all) {
+                if (m.getSequenceNumber() >= startingLevel) {
+                    UserProgress p = entries.get(m.getId());
+                    if (p == null || !p.isCompleted()) {
+                        allCompleted = false;
+                        break;
+                    }
+                }
+            }
+            if (allCompleted && !all.isEmpty()) {
+                return new LearningRecommendationDto(
+                        36,
+                        "Curriculum Mastered",
+                        "You have completed all modules from your assessed entry point (" +
+                                user.getLiteracyLevel() + " tier) through Level 36! Feel free to review earlier foundational modules.",
+                        "CHALLENGE",
+                        true,
+                        startingLevel
+                );
+            }
+            // Fallback to starting level
+            targetModule = all.stream()
+                    .filter(m -> m.getSequenceNumber() == startingLevel)
+                    .findFirst()
+                    .orElse(all.isEmpty() ? null : all.get(0));
+        }
+
+        if (targetModule == null) {
+            return new LearningRecommendationDto(1, "Money Basics", "Begin your financial journey", "STANDARD", false, 1);
+        }
+
+        UserProgress targetProgress = entries.get(targetModule.getId());
+        String adaptiveDifficulty = determineAdaptiveDifficulty(user, targetModule, targetProgress);
+
+        int seq = targetModule.getSequenceNumber();
+        String title = targetModule.getTitle();
+        String reason;
+
+        if (targetProgress != null && targetProgress.getStatus() == LevelStatus.IN_PROGRESS) {
+            reason = "Resume Level " + seq + " (" + title + "): In progress — complete this lesson to advance your " +
+                    user.getLiteracyLevel() + " curriculum.";
+        } else if (seq == startingLevel && (targetProgress == null || targetProgress.getAttempts() == 0)) {
+            reason = "Recommended starting point for " + user.getLiteracyLevel() + " literacy: Begin with Level " +
+                    seq + " (" + title + ") to build fundamentals aligned with your " + riskProfile + " risk profile.";
+        } else if ("REINFORCEMENT".equals(adaptiveDifficulty)) {
+            reason = "Recommended next: Level " + seq + " (" + title + ") — Reinforcement mode active to build mastery on core concepts.";
+        } else if ("CHALLENGE".equals(adaptiveDifficulty)) {
+            reason = "Recommended next: Level " + seq + " (" + title + ") — Challenge mode active! Deepen your advanced financial skills.";
+        } else {
+            reason = "Recommended next: Level " + seq + " (" + title + ") — Next milestone in your " +
+                    user.getLiteracyLevel() + " personalized path.";
+        }
+
+        return new LearningRecommendationDto(
+                seq,
+                title,
+                reason,
+                adaptiveDifficulty,
+                false,
+                startingLevel
+        );
     }
 
     /** Backend-scored submission. Decides pass/fail, updates progress, unlocks next. */
@@ -350,6 +549,13 @@ public class LearningPathService {
         int finalLevel = reloaded.getLevel();
         int streakVal = streak == null ? reloaded.getLearningStreak() : streak.streak();
 
+        // Synchronize updated recommendation on user
+        TieredLearningPathDto updatedPath = getPath(userId);
+        if (updatedPath.getRecommendationReason() != null) {
+            reloaded.setRecommendation(updatedPath.getRecommendationReason());
+            users.save(reloaded);
+        }
+
         return new LevelQuizResultDto(
                 correct, total, percentage, passed,
                 xpEarned, coinsEarned,
@@ -360,7 +566,7 @@ public class LearningPathService {
                 newAchievements, newBadges,
                 newBadges.isEmpty() ? null : newBadges.get(0).getBadgeName(),
                 nextUnlocked,
-                getPath(userId));
+                updatedPath);
     }
 
     /** Reset a user's learning progress only (does NOT touch XP/coins). */
@@ -457,7 +663,7 @@ public class LearningPathService {
         }
     }
 
-    private LevelDto toLevelDto(LearningModule m, UserProgress p) {
+    private LevelDto toLevelDto(LearningModule m, UserProgress p, int recommendedLevel, String adaptiveDifficulty) {
         UserProgress progress = p;
         if (progress == null) {
             progress = new UserProgress();
@@ -465,10 +671,12 @@ public class LearningPathService {
             progress.setCompleted(false);
             progress.setBestScore(0);
         }
+        boolean isRecommended = m.getSequenceNumber() == recommendedLevel;
         return new LevelDto(
                 m.getSequenceNumber(), m.getTitle(), m.getDescription(),
                 m.getDifficulty(), m.getXpReward(), m.getCoinReward(),
-                m.getEstimatedMinutes(), progress.getStatus(), progress.getBestScore(), progress.isCompleted());
+                m.getEstimatedMinutes(), progress.getStatus(), progress.getBestScore(), progress.isCompleted(),
+                isRecommended, adaptiveDifficulty);
     }
 
     private LearningPathSummaryDto summary(User u, long completed, int total) {

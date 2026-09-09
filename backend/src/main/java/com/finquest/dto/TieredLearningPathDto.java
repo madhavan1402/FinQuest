@@ -17,4 +17,13 @@ import java.util.List;
 public class TieredLearningPathDto {
     private List<TierDto> tiers;
     private LearningPathSummaryDto summary;
+    private Integer recommendedLevelNumber;
+    private String recommendedModuleTitle;
+    private String recommendationReason;
+    private String adaptiveDifficulty;
+    private boolean pathMastered;
+
+    public TieredLearningPathDto(List<TierDto> tiers, LearningPathSummaryDto summary) {
+        this(tiers, summary, 1, null, null, "STANDARD", false);
+    }
 }

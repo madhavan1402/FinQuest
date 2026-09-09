@@ -22,4 +22,10 @@ public class QuizQuestionDto {
     private List<String> options;
     private Difficulty difficulty;
     private String topic;
+    private String adaptiveMode; // REINFORCEMENT, STANDARD, CHALLENGE
+
+    public QuizQuestionDto(Long questionId, int questionNumber, String questionText,
+                           List<String> options, Difficulty difficulty, String topic) {
+        this(questionId, questionNumber, questionText, options, difficulty, topic, "STANDARD");
+    }
 }

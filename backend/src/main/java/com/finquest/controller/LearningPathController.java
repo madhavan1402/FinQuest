@@ -61,6 +61,13 @@ public class LearningPathController {
         return ResponseEntity.ok(service.getPath(principal.getId()));
     }
 
+    // GET /api/learning-path/recommendation — personalized next lesson recommendation
+    @GetMapping("/recommendation")
+    public ResponseEntity<LearningRecommendationDto> getRecommendation(
+            @AuthenticationPrincipal UserPrincipal principal) {
+        return ResponseEntity.ok(service.getRecommendation(principal.getId()));
+    }
+
     // Reset learning progress only (does NOT touch XP/coins)
     @PostMapping("/reset")
     public ResponseEntity<TieredLearningPathDto> reset(@AuthenticationPrincipal UserPrincipal principal) {

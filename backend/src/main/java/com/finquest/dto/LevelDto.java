@@ -24,4 +24,13 @@ public class LevelDto {
     private LevelStatus status;
     private int bestScore;
     private boolean completed;
+    private boolean recommended;
+    private String adaptiveDifficulty;
+
+    public LevelDto(int levelNumber, String title, String description, Difficulty difficulty,
+                    int xpReward, int coinReward, int estimatedMinutes, LevelStatus status,
+                    int bestScore, boolean completed) {
+        this(levelNumber, title, description, difficulty, xpReward, coinReward,
+                estimatedMinutes, status, bestScore, completed, false, "STANDARD");
+    }
 }

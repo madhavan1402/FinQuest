@@ -249,6 +249,7 @@ export default function Quiz() {
   const answeredCount = Object.keys(answers).length;
   const progressPct   = questions.length ? (answeredCount / questions.length) * 100 : 0;
   const quizPassed    = result ? (result.passed ?? ((result.score ?? 0) * 100 >= (result.totalQuestions ?? 1) * 70)) : false;
+  const adaptiveMode  = questions[0]?.adaptiveMode ?? 'STANDARD';
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-8">
@@ -257,7 +258,18 @@ export default function Quiz() {
       {/* Header */}
       <div className="mb-6 flex items-center justify-between fade-slide-up">
         <div>
-          <h1 className="text-2xl font-bold text-white">📝 Quiz</h1>
+          <div className="flex items-center gap-2">
+            <h1 className="text-2xl font-bold text-white">📝 Quiz</h1>
+            <span className={`text-xs font-bold px-2.5 py-0.5 rounded-full border ${
+              adaptiveMode === 'CHALLENGE'
+                ? 'bg-rose-950/70 border-rose-500/40 text-rose-300'
+                : adaptiveMode === 'REINFORCEMENT'
+                ? 'bg-sky-950/70 border-sky-500/40 text-sky-300'
+                : 'bg-indigo-950/60 border-indigo-500/30 text-indigo-400'
+            }`}>
+              Adaptive: {adaptiveMode}
+            </span>
+          </div>
           <p className="text-slate-400 mt-0.5 text-sm">Level {quizLevel}</p>
         </div>
         <button
@@ -301,9 +313,20 @@ export default function Quiz() {
               <span className="text-slate-300 text-sm font-semibold">
                 {answeredCount} <span className="text-slate-500">/ {questions.length}</span> answered
               </span>
-              <span className="text-xs font-bold text-indigo-400 bg-indigo-950/60 border border-indigo-500/30 px-2.5 py-0.5 rounded-full">
-                Level {quizLevel}
-              </span>
+              <div className="flex items-center gap-1.5">
+                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
+                  adaptiveMode === 'CHALLENGE'
+                    ? 'bg-rose-950/70 border-rose-500/40 text-rose-300'
+                    : adaptiveMode === 'REINFORCEMENT'
+                    ? 'bg-sky-950/70 border-sky-500/40 text-sky-300'
+                    : 'bg-indigo-950/60 border-indigo-500/30 text-indigo-400'
+                }`}>
+                  {adaptiveMode}
+                </span>
+                <span className="text-xs font-bold text-indigo-400 bg-indigo-950/60 border border-indigo-500/30 px-2.5 py-0.5 rounded-full">
+                  Level {quizLevel}
+                </span>
+              </div>
             </div>
 
             {/* Progress bar */}
