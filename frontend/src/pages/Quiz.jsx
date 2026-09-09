@@ -3,10 +3,12 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useMentor } from '../context/MentorContext';
 import { getLevelQuiz, submitLevelQuiz, getQuizQuestions, submitQuiz } from '../api/endpoints';
 import CountUp from '../components/CountUp';
 import ConfettiAnimation from '../components/ConfettiAnimation';
 import { SkeletonQuiz } from '../components/SkeletonCard';
+
 
 const OPTIONS = ['A', 'B', 'C', 'D'];
 
@@ -125,6 +127,7 @@ const getFallbackQuestions = (level) =>
 
 export default function Quiz() {
   const { user, saveUser, saveQuizResult } = useAuth();
+  const mentor = useMentor();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const quizLevel = parseInt(searchParams.get('level') ?? '1', 10);
@@ -141,6 +144,7 @@ export default function Quiz() {
     setQuestions(getFallbackQuestions(quizLevel));
     setUsingFallback(true);
     setPhase('active');
+    if (mentor) mentor.think(`Level ${quizLevel} Quiz`);
   };
 
   const loadQuestions = () => {
@@ -164,6 +168,7 @@ export default function Quiz() {
                 }));
                 setQuestions(normalized);
                 setPhase('active');
+                if (mentor) mentor.think(`Level ${quizLevel} Quiz`);
               }
             })
             .catch(() => applyFallback());
@@ -175,10 +180,12 @@ export default function Quiz() {
           }));
           setQuestions(normalized);
           setPhase('active');
+          if (mentor) mentor.think(`Level ${quizLevel} Quiz`);
         }
       })
       .catch(() => applyFallback());
   };
+
 
   useEffect(() => {
     loadQuestions();
@@ -226,6 +233,14 @@ export default function Quiz() {
       const passed = data.passed ?? ((data.score ?? 0) * 100 >= (data.totalQuestions ?? 1) * 70);
       if (passed && !usingFallback) setShowConfetti(true);
 
+      if (mentor) {
+        if (passed) {
+          mentor.celebrate(`Level ${quizLevel}`, data.xpEarned ?? 50);
+        } else {
+          mentor.react('sad', `Don't worry! Review the concepts and try Level ${quizLevel} again. You've got this!`);
+        }
+      }
+
       const latestXp = data.currentXp ?? data.xp ?? user?.xp ?? 0;
       const latestLevel = data.level ?? (passed ? Math.max(user?.level ?? 1, quizLevel + 1) : user?.level ?? 1);
 
@@ -237,6 +252,7 @@ export default function Quiz() {
       setErrorMsg('Submission failed. Please try again.');
       setPhase('active');
     }
+
   };
 
   const handleRetry = () => {

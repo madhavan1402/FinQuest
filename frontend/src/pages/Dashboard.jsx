@@ -1,6 +1,7 @@
 // src/pages/Dashboard.jsx — Premium FinQuest Dashboard
 import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { useMentor } from '../context/MentorContext';
 import { getUserProfile, getGamificationSummary } from '../api/endpoints';
 import CountUp from '../components/CountUp';
 import Modal from '../components/Modal';
@@ -9,6 +10,7 @@ import { SkeletonStatCard, SkeletonCard } from '../components/SkeletonCard';
 let toastIdCounter = 0;
 export default function Dashboard() {
   const { user, saveUser, logout, lastQuizResult } = useAuth();
+  const mentor = useMentor();
   const [profile,    setProfile]    = useState(null);
   const [gami,       setGami]       = useState(null);
   const [loading,    setLoading]    = useState(true);
@@ -18,6 +20,8 @@ export default function Dashboard() {
   const [levelModal, setLevelModal] = useState(null);
   const [prevXp,     setPrevXp]     = useState(null);
   const toastTimer = useRef(null);
+  const greetedRef = useRef(false);
+
   const addToast = (type, message) => {
     const id = ++toastIdCounter;
     setToasts(prev => [...prev, { id, type, message }]);
@@ -37,7 +41,12 @@ export default function Dashboard() {
         setError('');
         saveUser({ ...user, xp: p.xp, level: p.level, financialScore: p.financialScore });
         if (gamiRes) setGami(gamiRes.data);
+        if (mentor && p?.name && !greetedRef.current) {
+          greetedRef.current = true;
+          mentor.greet(p.name);
+        }
       })
+
       .catch((err) => {
         if (err.response?.status === 401 || err.response?.status === 403) {
           logout();
@@ -64,6 +73,12 @@ export default function Dashboard() {
     } else if (r.leveledUp) {
       setLevelModal({ level: r.level, xpEarned: r.xpEarned });
     }
+    // Mentor celebration on quiz finish
+    if (mentor) {
+      if (r.xpEarned > 0) {
+        mentor.celebrate(r.moduleTitle || 'Quiz', r.xpEarned);
+      }
+    }
     // Toasts
     if (r.xpEarned > 0) addToast('xp', `⚡ +${r.xpEarned} XP earned!`);
     if ((r.coinsEarned ?? 0) > 0) addToast('coin', `🪙 +${r.coinsEarned} coins!`);
@@ -71,6 +86,7 @@ export default function Dashboard() {
     if (r.leveledUp) addToast('levelup', `🎊 Level Up! You're now Level ${r.level}!`);
     if (r.achievementsUnlocked?.length > 0) addToast('success', `✨ Achievement: ${r.achievementsUnlocked[0].name}`);
   }, [lastQuizResult]);
+
   useEffect(() => () => {
     if (toastTimer.current) clearTimeout(toastTimer.current);
   }, []);

@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useMentor } from '../context/MentorContext';
 
 const NAV_LINKS = [
   { to: '/dashboard',    label: 'Dashboard',    icon: '🏠' },
@@ -11,32 +12,25 @@ const NAV_LINKS = [
   { to: '/leaderboard',  label: 'Leaderboard',   icon: '🏆' },
 ];
 
-// Voice preference persisted in localStorage
-const VOICE_KEY = 'fq_voice_enabled';
-
 export default function Navbar() {
   const { user, logout } = useAuth();
+  const { muted, toggleMute } = useMentor();
   const navigate         = useNavigate();
   const { pathname }     = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
-  const [voiceOn, setVoiceOn]   = useState(() => {
-    try { return localStorage.getItem(VOICE_KEY) !== 'false'; } catch { return true; }
-  });
 
   const handleLogout = () => {
     logout();
     navigate('/login');
   };
 
-  const toggleVoice = () => {
-    const next = !voiceOn;
-    setVoiceOn(next);
-    localStorage.setItem(VOICE_KEY, String(next));
-    if (!next && window.speechSynthesis) window.speechSynthesis.cancel();
+  const handleToggleVoice = () => {
+    toggleMute();
   };
 
   // Close mobile menu on route change
   useEffect(() => { setMenuOpen(false); }, [pathname]);
+
 
   const isActive = (to) =>
     pathname === to ||
@@ -102,20 +96,21 @@ export default function Navbar() {
 
             {/* Voice toggle */}
             <button
-              onClick={toggleVoice}
-              title={voiceOn ? 'Voice ON — click to mute' : 'Voice OFF — click to enable'}
-              aria-label={voiceOn ? 'Mute voice' : 'Enable voice'}
+              onClick={handleToggleVoice}
+              title={!muted ? 'Voice ON — click to mute' : 'Voice OFF — click to enable'}
+              aria-label={!muted ? 'Mute voice' : 'Enable voice'}
               className="w-8 h-8 rounded-lg flex items-center justify-center text-base
                          transition-all duration-200 border
                          hover:bg-slate-700/60"
               style={{
-                background: voiceOn ? 'rgba(99,102,241,0.15)' : 'rgba(51,65,85,0.4)',
-                borderColor: voiceOn ? 'rgba(99,102,241,0.4)' : 'rgba(71,85,105,0.4)',
-                color: voiceOn ? '#818cf8' : '#475569',
+                background: !muted ? 'rgba(99,102,241,0.15)' : 'rgba(51,65,85,0.4)',
+                borderColor: !muted ? 'rgba(99,102,241,0.4)' : 'rgba(71,85,105,0.4)',
+                color: !muted ? '#818cf8' : '#475569',
               }}
             >
-              {voiceOn ? '🔊' : '🔇'}
+              {!muted ? '🔊' : '🔇'}
             </button>
+
 
             {/* Logout */}
             <button

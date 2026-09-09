@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useMentor } from '../context/MentorContext';
 import { getLearningPath } from '../api/endpoints';
 import ProgressHeader from '../components/ProgressHeader';
 import LearningNode from '../components/LearningNode';
@@ -10,6 +11,7 @@ import './LearningPath.css';
 
 export default function LearningPath() {
   const { user } = useAuth();
+  const mentor = useMentor();
   const navigate = useNavigate();
   const location = useLocation();
   const [path, setPath] = useState(null);
@@ -19,9 +21,19 @@ export default function LearningPath() {
   useEffect(() => {
     if (!user) { navigate('/login'); return; }
     getLearningPath()
-      .then(({ data }) => setPath(data))
+      .then(({ data }) => {
+        setPath(data);
+        if (mentor && data?.recommendedLevelNumber && data?.recommendedModuleTitle) {
+          mentor.recommendNext(
+            data.recommendedLevelNumber,
+            data.recommendedModuleTitle,
+            data.recommendationReason
+          );
+        }
+      })
       .catch(() => setError('We could not load your saved learning path. Start the backend and try again.'));
   }, [user, navigate]);
+
 
   if (error) return <main className="learning-path-page"><div className="path-error">{error}</div></main>;
   if (!path) return <main className="learning-path-page"><div className="path-loading">Building your FinQuest journey…</div></main>;

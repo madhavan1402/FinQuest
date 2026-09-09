@@ -1,6 +1,8 @@
 // src/App.jsx
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { MentorProvider } from './context/MentorContext';
+import GlobalMentor from './components/mentor/GlobalMentor';
 import Navbar        from './components/Navbar';
 import Login         from './pages/Login';
 import Register      from './pages/Register';
@@ -43,27 +45,31 @@ function ProtectedRoute({ children }) {
 export default function App() {
   return (
     <AuthProvider>
-      <BrowserRouter>
-        <Routes>
-          {/* Public */}
-          <Route path="/login"    element={<Login />} />
-          <Route path="/register" element={<Register />} />
+      <MentorProvider>
+        <BrowserRouter>
+          <Routes>
+            {/* Public */}
+            <Route path="/login"    element={<Login />} />
+            <Route path="/register" element={<Register />} />
 
-          {/* Protected */}
-          <Route path="/assessment"    element={<ProtectedRoute><Assessment /></ProtectedRoute>} />
-          <Route path="/dashboard"    element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-          <Route path="/levels"       element={<ProtectedRoute><Levels /></ProtectedRoute>} />
-          <Route path="/learning-path" element={<ProtectedRoute><LearningPath /></ProtectedRoute>} />
-          <Route path="/quiz"         element={<ProtectedRoute><Quiz /></ProtectedRoute>} />
-          <Route path="/simulate"     element={<ProtectedRoute><Simulate /></ProtectedRoute>} />
-          <Route path="/leaderboard"  element={<ProtectedRoute><Leaderboard /></ProtectedRoute>} />
-          <Route path="/rewards"      element={<ProtectedRoute><Rewards /></ProtectedRoute>} />
+            {/* Protected */}
+            <Route path="/assessment"    element={<ProtectedRoute><Assessment /></ProtectedRoute>} />
+            <Route path="/dashboard"    element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+            <Route path="/levels"       element={<ProtectedRoute><Levels /></ProtectedRoute>} />
+            <Route path="/learning-path" element={<ProtectedRoute><LearningPath /></ProtectedRoute>} />
+            <Route path="/quiz"         element={<ProtectedRoute><Quiz /></ProtectedRoute>} />
+            <Route path="/simulate"     element={<ProtectedRoute><Simulate /></ProtectedRoute>} />
+            <Route path="/leaderboard"  element={<ProtectedRoute><Leaderboard /></ProtectedRoute>} />
+            <Route path="/rewards"      element={<ProtectedRoute><Rewards /></ProtectedRoute>} />
 
-          {/* Redirects */}
-          <Route path="/"  element={<Navigate to="/dashboard" replace />} />
-          <Route path="*"  element={<Navigate to="/dashboard" replace />} />
-        </Routes>
-      </BrowserRouter>
+            {/* Redirects */}
+            <Route path="/"  element={<Navigate to="/dashboard" replace />} />
+            <Route path="*"  element={<Navigate to="/dashboard" replace />} />
+          </Routes>
+          <GlobalMentor />
+        </BrowserRouter>
+      </MentorProvider>
     </AuthProvider>
   );
 }
+

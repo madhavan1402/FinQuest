@@ -2,11 +2,14 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { getAssessmentQuestions, submitAssessment, getAssessmentResult } from '../api/endpoints';
+import { useMentor } from '../context/MentorContext';
+import { getAssessmentQuestions, submitAssessment } from '../api/endpoints';
 import CountUp from '../components/CountUp';
+
 
 export default function Assessment() {
   const { user, saveUser } = useAuth();
+  const mentor             = useMentor();
   const navigate           = useNavigate();
 
   const [questions, setQuestions]     = useState([]);
@@ -21,6 +24,9 @@ export default function Assessment() {
   useEffect(() => {
     let isMounted = true;
     setLoading(true);
+    if (mentor) {
+      mentor.encourage('Welcome to the Financial Assessment! Answer honestly so I can personalize your learning path.');
+    }
     getAssessmentQuestions()
       .then((res) => {
         if (!isMounted) return;
@@ -40,6 +46,7 @@ export default function Assessment() {
       isMounted = false;
     };
   }, []);
+
 
   const currentQ = questions[currentIndex];
   const totalQ   = questions.length;
@@ -80,6 +87,10 @@ export default function Assessment() {
       const resData = res.data?.data || res.data;
       setResult(resData);
 
+      if (mentor) {
+        mentor.explain(`Assessment complete! You've been placed at ${resData.literacyLevel} with a ${resData.riskProfile} risk profile.`);
+      }
+
       // Update AuthContext and LocalStorage with newly unlocked profile fields
       saveUser({
         ...user,
@@ -94,6 +105,7 @@ export default function Assessment() {
     } finally {
       setSubmitting(false);
     }
+
   };
 
   if (loading) {
