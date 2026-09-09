@@ -1,7 +1,7 @@
 // src/context/AuthContext.jsx
 // Global state for the logged-in user and the last quiz result.
 // Persisted to localStorage so both survive a page refresh.
-import { createContext, useContext, useState } from 'react';
+import { createContext, useContext, useState, useEffect } from 'react';
 
 const AuthContext = createContext(null);
 
@@ -17,13 +17,26 @@ export function AuthProvider({ children }) {
     }
   });
 
-  // Normalise the user object so user.userId is always set.
-  // The backend login/register response uses 'userId', but some endpoints
-  // return 'id' — this ensures every component can safely use user.userId.
+  // Normalise the user object so user.userId is always set,
+  // and ensure accessToken and refreshToken are preserved across partial updates.
   const saveUser = (userData) => {
+    if (!userData) {
+      setUser(null);
+      localStorage.removeItem('fq_user');
+      return;
+    }
+    let current = {};
+    try {
+      current = JSON.parse(localStorage.getItem('fq_user') || '{}');
+    } catch {
+      current = {};
+    }
     const normalised = {
+      ...current,
       ...userData,
-      userId: userData.userId ?? userData.id ?? null,
+      userId: userData.userId ?? userData.id ?? current.userId ?? null,
+      accessToken: userData.accessToken ?? current.accessToken ?? null,
+      refreshToken: userData.refreshToken ?? current.refreshToken ?? null,
     };
     setUser(normalised);
     localStorage.setItem('fq_user', JSON.stringify(normalised));
@@ -35,6 +48,14 @@ export function AuthProvider({ children }) {
     localStorage.removeItem('fq_user');
     localStorage.removeItem('fq_last_quiz');
   };
+
+  useEffect(() => {
+    const handleExpired = () => {
+      logout();
+    };
+    window.addEventListener('fq_session_expired', handleExpired);
+    return () => window.removeEventListener('fq_session_expired', handleExpired);
+  }, []);
 
   // ── Last quiz result ────────────────────────────────────────────────────────
   // Written by Quiz.jsx after every submission.

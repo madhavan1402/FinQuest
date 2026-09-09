@@ -1,6 +1,5 @@
 package com.finquest.dto;
 
-<<<<<<< HEAD
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Data;
 
@@ -16,30 +15,20 @@ import lombok.Data;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class AuthResponse {
     private String message;
-=======
-import lombok.AllArgsConstructor;
-import lombok.Data;
-
-// Returned to the client after a successful register or login.
-// Password is intentionally excluded — never send it back in a response.
-@Data
-@AllArgsConstructor
-public class AuthResponse {
-    private String message;       // "Registered successfully" / "Login successful"
->>>>>>> 348c16528166ec8e809d2b70a1061f3f9b6aa577
     private Long   userId;
     private String name;
     private String email;
     private int    level;
     private int    xp;
     private int    financialScore;
-<<<<<<< HEAD
     // New auth fields
     private String role;
     private boolean emailVerified;
     private String accessToken;
     private String refreshToken;
     private String tokenType = "Bearer";
+
+    public AuthResponse() {}
 
     // 7-arg constructor — backward compatible with the original AuthResponse
     // used by UserService.getProfile() and the seeded-test-user flow.
@@ -65,6 +54,4 @@ public class AuthResponse {
         this.refreshToken = refreshToken;
         this.tokenType = "Bearer";
     }
-=======
->>>>>>> 348c16528166ec8e809d2b70a1061f3f9b6aa577
 }

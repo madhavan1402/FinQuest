@@ -10,12 +10,21 @@ const api = axios.create({
   timeout: 10000,
 });
 
-<<<<<<< HEAD
 // Attach the JWT access token to every request.
 // After login the AuthContext stores the full AuthResponse (which includes
 // accessToken) under the localStorage key 'fq_user'. Read it back here and
 // set the Authorization: Bearer header so protected endpoints (which now
 // require JWT authentication) accept the request.
+const setAuthHeader = (headers, token) => {
+  if (!headers) return;
+  if (typeof headers.set === 'function') {
+    headers.set('Authorization', `Bearer ${token}`);
+  } else {
+    headers.Authorization = `Bearer ${token}`;
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+};
+
 api.interceptors.request.use(
   (config) => {
     try {
@@ -23,7 +32,7 @@ api.interceptors.request.use(
       const token = stored ? JSON.parse(stored).accessToken : null;
       if (token) {
         config.headers = config.headers ?? {};
-        config.headers.Authorization = `Bearer ${token}`;
+        setAuthHeader(config.headers, token);
       }
     } catch {
       // ignore malformed stored session
@@ -33,7 +42,7 @@ api.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// ── 401 handling: refresh the expired access token using the EXISTING
+// ── 401/403 handling: refresh the expired access token using the EXISTING
 // backend /api/auth/refresh mechanism, then retry the original request once.
 // This is NOT a second auth system — it simply rotates the stored JWT pair
 // using the backend's own refresh-token rotation endpoint. Requests to the
@@ -59,15 +68,16 @@ api.interceptors.response.use(
   (response) => response,
   async (error) => {
     const original = error.config;
-    // Only attempt refresh on 401 for authenticated, non-auth endpoints,
+    // Attempt refresh on 401/403 for authenticated, non-auth endpoints,
     // and never more than once per request.
+    const isAuthError = error.response?.status === 401 || error.response?.status === 403;
     if (
-      error.response?.status === 401 &&
+      isAuthError &&
       original &&
       !original._retry &&
       !original.url.includes('/auth/login') &&
       !original.url.includes('/auth/refresh')
-) {
+    ) {
       original._retry = true;
       try {
         if (!isRefreshing) {
@@ -84,7 +94,7 @@ api.interceptors.response.use(
             const updated = { ...JSON.parse(localStorage.getItem('fq_user') || '{}'), ...refreshed };
             localStorage.setItem('fq_user', JSON.stringify(updated));
             onRefreshed(refreshed.accessToken);
-            original.headers.Authorization = `Bearer ${refreshed.accessToken}`;
+            setAuthHeader(original.headers, refreshed.accessToken);
             return api(original);
           } finally {
             isRefreshing = false;
@@ -95,13 +105,14 @@ api.interceptors.response.use(
         const newToken = await new Promise((resolve) => {
           pendingQueue.push(resolve);
         });
-        original.headers.Authorization = `Bearer ${newToken}`;
+        setAuthHeader(original.headers, newToken);
         return api(original);
       } catch (refreshErr) {
         // Refresh failed (expired refresh token / revoked). Clear the session
         // so the UI redirects to login. Do NOT silently clobber a valid JWT.
         localStorage.removeItem('fq_user');
         pendingQueue = [];
+        window.dispatchEvent(new Event('fq_session_expired'));
         return Promise.reject(refreshErr);
       }
     }
@@ -109,6 +120,4 @@ api.interceptors.response.use(
   }
 );
 
-=======
->>>>>>> 348c16528166ec8e809d2b70a1061f3f9b6aa577
 export default api;

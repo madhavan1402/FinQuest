@@ -1,34 +1,14 @@
-<<<<<<< HEAD
 // src/pages/Dashboard.jsx — Premium FinQuest Dashboard
 import { useState, useEffect, useRef } from 'react';
-import { useAuth }        from '../context/AuthContext';
+import { useAuth } from '../context/AuthContext';
 import { getUserProfile, getGamificationSummary } from '../api/endpoints';
-import CountUp            from '../components/CountUp';
-import Modal              from '../components/Modal';
-import Toast              from '../components/Toast';
+import CountUp from '../components/CountUp';
+import Modal from '../components/Modal';
+import Toast from '../components/Toast';
 import { SkeletonStatCard, SkeletonCard } from '../components/SkeletonCard';
-
 let toastIdCounter = 0;
-=======
-// src/pages/Dashboard.jsx
-// Fetches user profile + achievements on mount.
-// Re-fetches profile whenever a quiz is submitted (via lastQuizResult in AuthContext).
-// Shows a toast notification after quiz submission.
-
-import { useState, useEffect, useRef } from 'react';
-import { useAuth }        from '../context/AuthContext';
-import { getUserProfile, getAchievements } from '../api/endpoints';
-import StatCard    from '../components/StatCard';
-import ProgressBar from '../components/ProgressBar';
-
-// XP needed to reach the next level = currentLevel × 100
-const xpThreshold = (level) => level * 100;
->>>>>>> 348c16528166ec8e809d2b70a1061f3f9b6aa577
-
 export default function Dashboard() {
-  const { user, saveUser, lastQuizResult } = useAuth();
-
-<<<<<<< HEAD
+  const { user, saveUser, logout, lastQuizResult } = useAuth();
   const [profile,    setProfile]    = useState(null);
   const [gami,       setGami]       = useState(null);
   const [loading,    setLoading]    = useState(true);
@@ -38,19 +18,14 @@ export default function Dashboard() {
   const [levelModal, setLevelModal] = useState(null);
   const [prevXp,     setPrevXp]     = useState(null);
   const toastTimer = useRef(null);
-
   const addToast = (type, message) => {
     const id = ++toastIdCounter;
     setToasts(prev => [...prev, { id, type, message }]);
     setTimeout(() => setToasts(prev => prev.filter(t => t.id !== id)), 4500);
   };
   const removeToast = (id) => setToasts(prev => prev.filter(t => t.id !== id));
-
-const fetchAll = (userId) => {
+  const fetchAll = () => {
     setLoading(true);
-    // Profile now comes from the JWT-based GET /api/profile (ProfileDto — no
-    // userId). Gamification summary is still fetched by userId because the
-    // backend GamificationController still requires the ?userId= param.
     Promise.all([
       getUserProfile(),
       getGamificationSummary().catch(() => null),
@@ -62,56 +37,33 @@ const fetchAll = (userId) => {
         setError('');
         saveUser({ ...user, xp: p.xp, level: p.level, financialScore: p.financialScore });
         if (gamiRes) setGami(gamiRes.data);
-=======
-  const [profile,      setProfile]      = useState(null);
-  const [achievements, setAchievements] = useState([]);
-  const [loading,      setLoading]      = useState(true);
-  const [error,        setError]        = useState('');
-  const [toast,        setToast]        = useState(null);
-  const toastTimer = useRef(null);
-
-  // ── Fetch profile from backend ──────────────────────────────────────────────
-  // Wrapped in useCallback pattern via userId dep to avoid stale closure
-  const fetchProfile = (userId) => {
-    setLoading(true);
-    getUserProfile(userId)
-      .then(({ data }) => {
-        setProfile(data);
-        setError('');
-        // Sync fresh values into AuthContext so Navbar pill stays current
-        saveUser({ ...user, xp: data.xp, level: data.level, financialScore: data.financialScore });
->>>>>>> 348c16528166ec8e809d2b70a1061f3f9b6aa577
       })
-      .catch(() => setError('Could not load profile. Is the backend running on port 8080?'))
-      .finally(() => setLoading(false));
+      .catch((err) => {
+        if (err.response?.status === 401 || err.response?.status === 403) {
+          logout();
+        } else {
+          setError('Could not load profile. Is the backend running on port 8080?');
+        }
+      })
+      .finally(() => {
+        setLoading(false);
+      });
   };
-
-<<<<<<< HEAD
   useEffect(() => {
-    const uid = user?.userId;
-    if (!uid) { setError('No user session found. Please log in again.'); setLoading(false); return; }
-    fetchAll(uid);
+    fetchAll();
   }, []);
-
   useEffect(() => {
-    if (!lastQuizResult || !user?.userId) return;
+    if (!lastQuizResult) return;
     const oldXp = profile?.xp ?? user?.xp ?? 0;
     setPrevXp(oldXp);
-    fetchAll(user.userId);
-
+    fetchAll();
     const r = lastQuizResult;
     const newBadges = r.badgesAwarded ?? [];
-
     if (newBadges.length > 0) {
       setBadgeModal(newBadges[0]);
-      const msg = `Fantastic ${user.name?.split(' ')[0] || ''}! You've unlocked the ${newBadges[0].badgeName} badge!`;
     } else if (r.leveledUp) {
       setLevelModal({ level: r.level, xpEarned: r.xpEarned });
-      const msg = `Congratulations ${user.name?.split(' ')[0] || ''}! You've reached Level ${r.level}!`;
-    } else if (r.currentStreak > 1) {
-      const msg = `${r.currentStreak}-day streak! You're on fire! 🔥`;
     }
-
     // Toasts
     if (r.xpEarned > 0) addToast('xp', `⚡ +${r.xpEarned} XP earned!`);
     if ((r.coinsEarned ?? 0) > 0) addToast('coin', `🪙 +${r.coinsEarned} coins!`);
@@ -119,25 +71,22 @@ const fetchAll = (userId) => {
     if (r.leveledUp) addToast('levelup', `🎊 Level Up! You're now Level ${r.level}!`);
     if (r.achievementsUnlocked?.length > 0) addToast('success', `✨ Achievement: ${r.achievementsUnlocked[0].name}`);
   }, [lastQuizResult]);
-
-  useEffect(() => () => { if (toastTimer.current) clearTimeout(toastTimer.current); }, []);
-
-  const xpToNext    = gami?.xpToNextLevel  ?? Math.max(0, (profile?.level ?? 1) * 100 - (profile?.xp ?? 0));
-  const xpProgress  = gami?.progressPercent ?? 0;
-  const coins       = gami?.coins          ?? profile?.coins ?? 0;
-  const curStreak   = gami?.currentStreak  ?? 0;
+  useEffect(() => () => {
+    if (toastTimer.current) clearTimeout(toastTimer.current);
+  }, []);
+  const xpToNext      = gami?.xpToNextLevel  ?? Math.max(0, (profile?.level ?? 1) * 100 - (profile?.xp ?? 0));
+  const xpProgress    = gami?.progressPercent ?? 0;
+  const coins         = gami?.coins          ?? profile?.coins ?? 0;
+  const curStreak     = gami?.currentStreak  ?? 0;
   const longestStreak = gami?.longestStreak ?? 0;
-  const badges      = gami?.badges         ?? [];
-  const achievements = gami?.achievements  ?? [];
-  const firstName   = profile?.name?.split(' ')[0] ?? user?.name?.split(' ')[0] ?? '…';
-
+  const badges        = gami?.badges         ?? [];
+  const achievements  = gami?.achievements  ?? [];
+  const firstName     = profile?.name?.split(' ')[0] ?? user?.name?.split(' ')[0] ?? '…';
   return (
     <div className="max-w-6xl mx-auto px-4 py-8">
-
       {/* Toast stack */}
       <Toast toasts={toasts} onRemove={removeToast} />
-
-      {/* ── Badge unlock modal ─────────────────────────────────────────────── */}
+      {/* Badge unlock modal */}
       <Modal open={!!badgeModal} onClose={() => setBadgeModal(null)}>
         <div className="bg-slate-900 border border-violet-500/60 rounded-2xl p-8 text-center shadow-2xl">
           <div
@@ -146,76 +95,52 @@ const fetchAll = (userId) => {
           >
             {badgeModal?.icon ?? '🏅'}
           </div>
-          <div className="text-violet-400 text-xs font-bold tracking-widest uppercase mb-2">Badge Unlocked!</div>
-          <h2 className="text-white text-2xl font-bold mb-2">{badgeModal?.badgeName}</h2>
-          {badgeModal?.description && (
-            <p className="text-slate-400 text-sm mb-4">{badgeModal.description}</p>
-          )}
-          <button
-            onClick={() => setBadgeModal(null)}
-            className="btn-primary px-8 py-2.5 rounded-xl text-sm"
-          >
-            Awesome! 🎉
+          <p className="text-violet-400 text-xs font-bold uppercase tracking-widest mb-1">New Badge Unlocked!</p>
+          <h2 className="text-2xl font-black text-white mb-2">{badgeModal?.badgeName}</h2>
+          <p className="text-slate-400 text-sm mb-6">{badgeModal?.description ?? 'Keep learning to unlock more!'}</p>
+          <button onClick={() => setBadgeModal(null)} className="btn-primary px-8 py-2.5 rounded-xl font-bold">
+            Awesome! 🚀
           </button>
         </div>
       </Modal>
-
-      {/* ── Level-up modal ─────────────────────────────────────────────────── */}
+      {/* Level up modal */}
       <Modal open={!!levelModal} onClose={() => setLevelModal(null)}>
-        <div className="bg-slate-900 border border-amber-500/60 rounded-2xl p-8 text-center shadow-2xl overflow-hidden relative">
-          {/* Glow bg */}
-          <div className="absolute inset-0 bg-gradient-to-b from-amber-500/5 to-transparent pointer-events-none" />
-          <div className="text-5xl mb-3" style={{ animation: 'bounceIn 0.5s ease' }}>✨</div>
-          <div className="text-amber-400 text-xs font-bold tracking-widest uppercase mb-3">Level Up!</div>
-          <div
-            className="text-6xl font-black text-white mb-2"
-            style={{ animation: 'scaleIn 0.4s 0.1s cubic-bezier(0.34,1.56,0.64,1) both' }}
-          >
-            Level {levelModal?.level}
-          </div>
-          {levelModal?.xpEarned > 0 && (
-            <div className="text-indigo-300 font-semibold mb-3">+{levelModal.xpEarned} XP</div>
-          )}
-          <p className="text-slate-400 text-sm mb-6">You're getting better with every decision.</p>
-          <button
-            onClick={() => setLevelModal(null)}
-            className="btn-primary px-8 py-2.5 rounded-xl text-sm"
-          >
-            Keep Going! 🚀
+        <div className="bg-slate-900 border border-amber-500/60 rounded-2xl p-8 text-center shadow-2xl">
+          <div className="text-7xl mb-4" style={{ animation: 'bounceIn 0.6s ease' }}>🎊</div>
+          <p className="text-amber-400 text-xs font-bold uppercase tracking-widest mb-1">Level Up!</p>
+          <h2 className="text-3xl font-black text-white mb-2">You reached Level {levelModal?.level}!</h2>
+          <p className="text-slate-400 text-sm mb-6">+{levelModal?.xpEarned} XP earned! New challenges await.</p>
+          <button onClick={() => setLevelModal(null)} className="btn-primary px-8 py-2.5 rounded-xl font-bold">
+            Continue Journey 🗺️
           </button>
         </div>
       </Modal>
-
-      {/* ── Hero section ───────────────────────────────────────────────────── */}
-      <div
-        className="mb-8 rounded-2xl p-6 border border-slate-700/60 relative overflow-hidden"
-        style={{
-          background: 'linear-gradient(135deg, rgba(79,70,229,0.12) 0%, rgba(139,92,246,0.08) 50%, rgba(15,23,42,0) 100%)',
-          animation: 'fadeSlideUp 0.4s ease',
-        }}
-      >
-        <div className="absolute top-0 right-0 w-64 h-64 rounded-full opacity-5 pointer-events-none"
-          style={{ background: 'radial-gradient(circle, #6366f1, transparent)', transform: 'translate(30%, -30%)' }} />
-        <h1 className="text-3xl font-bold text-white mb-1">
-          Welcome back, <span style={{ color: '#818cf8' }}>{firstName}</span> 👋
-        </h1>
-        <p className="text-slate-400">Here's your financial progress overview</p>
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8 fade-slide-up">
+        <div>
+          <h1 className="text-3xl font-black text-white tracking-tight">
+            Welcome back, <span className="text-indigo-400">{firstName}</span> 👋
+          </h1>
+          <p className="text-slate-400 text-sm mt-1">Here is your financial learning overview</p>
+        </div>
         {curStreak > 0 && (
-          <div className="mt-3 inline-flex items-center gap-2 bg-orange-950/40 border border-orange-500/30 rounded-full px-4 py-1.5 text-sm">
-            <span className="flame">🔥</span>
-            <span className="text-orange-300 font-semibold">{curStreak}-day streak!</span>
+          <div className="flex items-center gap-2 bg-slate-800/80 border border-orange-500/30 px-4 py-2 rounded-2xl flex-shrink-0">
+            <span className="text-2xl flame">🔥</span>
+            <div>
+              <p className="text-orange-400 font-bold text-sm leading-none">{curStreak}-Day Streak</p>
+              <p className="text-slate-500 text-[11px] mt-0.5">Keep learning daily!</p>
+            </div>
             {longestStreak > curStreak && (
               <span className="text-slate-500 text-xs">Best: {longestStreak}</span>
             )}
           </div>
         )}
       </div>
-
-      {/* ── Loading ─────────────────────────────────────────────────────────── */}
+      {/* Loading */}
       {loading && (
         <>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
-            {[0,1,2,3].map(i => <SkeletonStatCard key={i} />)}
+            {[0, 1, 2, 3].map(i => <SkeletonStatCard key={i} />)}
           </div>
           <SkeletonCard lines={2} className="mb-6" />
           <div className="grid md:grid-cols-2 gap-6">
@@ -224,145 +149,28 @@ const fetchAll = (userId) => {
           </div>
         </>
       )}
-
-      {/* ── Error ───────────────────────────────────────────────────────────── */}
+      {/* Error */}
       {!loading && error && (
-        <div className="bg-red-950/60 border border-red-500/40 rounded-xl p-8 text-center"
-          style={{ animation: 'fadeSlideUp 0.3s ease' }}>
+        <div
+          className="bg-red-950/60 border border-red-500/40 rounded-xl p-8 text-center"
+          style={{ animation: 'fadeSlideUp 0.3s ease' }}
+        >
           <div className="text-5xl mb-3">⚠️</div>
           <p className="text-red-300 font-medium mb-4">{error}</p>
-          <button onClick={() => fetchAll(user?.userId)} className="btn-secondary px-6 py-2 rounded-lg text-sm">
-=======
-  // ── Fetch achievements ──────────────────────────────────────────────────────
-  const fetchAchievements = (userId) => {
-    getAchievements(userId)
-      .then(({ data }) => setAchievements(data))
-      .catch(() => {}); // achievements are non-critical — fail silently
-  };
-
-  // ── Initial load ────────────────────────────────────────────────────────────
-  useEffect(() => {
-    const uid = user?.userId;
-    if (!uid) {
-      setError('No user session found. Please log in again.');
-      setLoading(false);
-      return;
-    }
-    fetchProfile(uid);
-    fetchAchievements(uid);
-  }, []); // runs once on mount
-
-  // ── Re-fetch after quiz submission ──────────────────────────────────────────
-  // lastQuizResult changes every time Quiz.jsx calls saveQuizResult()
-  useEffect(() => {
-    if (!lastQuizResult || !user?.userId) return;
-    fetchProfile(user.userId);   // pull fresh XP + level from DB
-    showToast(lastQuizResult);   // display the result notification
-  }, [lastQuizResult]);
-
-  // ── Toast helpers ───────────────────────────────────────────────────────────
-  const showToast = (result) => {
-    if (toastTimer.current) clearTimeout(toastTimer.current);
-    setToast(result);
-    toastTimer.current = setTimeout(() => setToast(null), 4000);
-  };
-
-  useEffect(() => () => {
-    if (toastTimer.current) clearTimeout(toastTimer.current);
-  }, []);
-
-  // ── Derived values ──────────────────────────────────────────────────────────
-  const xpMax       = profile ? xpThreshold(profile.level) : 100;
-  const xpRemaining = profile ? Math.max(xpMax - profile.xp, 0) : 0;
-
-  // ── Render ──────────────────────────────────────────────────────────────────
-  return (
-    <div className="max-w-6xl mx-auto px-4 py-10">
-
-      {/* ── Toast notification ───────────────────────────────────────────────── */}
-      {toast && (
-        <div className="fixed top-20 left-1/2 -translate-x-1/2 z-50 w-full max-w-md px-4">
-          <div className={`rounded-xl border px-5 py-4 shadow-2xl
-            ${toast.leveledUp
-              ? 'bg-amber-900/95 border-amber-400/60'
-              : 'bg-emerald-900/95 border-emerald-400/60'}`}
-          >
-            <div className="flex items-center justify-between mb-2">
-              <div className="flex items-center gap-2">
-                <span className="text-2xl">{toast.leveledUp ? '🎊' : '✅'}</span>
-                <span className="text-white font-bold text-sm">
-                  {toast.leveledUp
-                    ? `Level Up! You reached Level ${toast.level}!`
-                    : 'Quiz submitted successfully!'}
-                </span>
-              </div>
-              <button onClick={() => setToast(null)}
-                className="text-slate-400 hover:text-white text-xl leading-none ml-3">×</button>
-            </div>
-            <div className="flex gap-4 text-xs flex-wrap">
-              <span className="text-slate-300">
-                Score: <strong className="text-white">{toast.score}/{toast.totalQuestions}</strong>
-              </span>
-              <span className="text-slate-300">
-                XP: <strong className="text-indigo-300">+{toast.xpEarned}</strong>
-              </span>
-              <span className="text-slate-300">
-                Level: <strong className="text-amber-300">{toast.level}</strong>
-              </span>
-            </div>
-            {toast.badgeAwarded && (
-              <p className="mt-2 text-xs text-violet-300 font-medium">
-                🏅 Badge unlocked: {toast.badgeAwarded}
-              </p>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* ── Page header ──────────────────────────────────────────────────────── */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-white">
-          Welcome back,{' '}
-          <span className="text-indigo-400">{profile?.name ?? user?.name ?? '…'}</span> 👋
-        </h1>
-        <p className="text-slate-400 mt-1">Here's your financial progress overview</p>
-      </div>
-
-      {/* ── Loading ───────────────────────────────────────────────────────────── */}
-      {loading && (
-        <div className="flex flex-col items-center justify-center py-24 gap-4">
-          <div className="w-10 h-10 rounded-full border-4 border-indigo-500
-                          border-t-transparent animate-spin" />
-          <p className="text-slate-400 text-sm">Loading your profile…</p>
-        </div>
-      )}
-
-      {/* ── Error ─────────────────────────────────────────────────────────────── */}
-      {!loading && error && (
-        <div className="bg-red-950/60 border border-red-500/40 rounded-xl p-6 text-center">
-          <div className="text-4xl mb-3">⚠️</div>
-          <p className="text-red-300 font-medium">{error}</p>
-          <button
-            onClick={() => fetchProfile(user?.userId)}
-            className="mt-4 bg-slate-700 hover:bg-slate-600 text-white text-sm
-                       px-5 py-2 rounded-lg transition-colors"
-          >
->>>>>>> 348c16528166ec8e809d2b70a1061f3f9b6aa577
+          <button onClick={fetchAll} className="btn-secondary px-6 py-2 rounded-lg text-sm">
             Retry
           </button>
         </div>
       )}
-
-<<<<<<< HEAD
-      {/* ── Main content ────────────────────────────────────────────────────── */}
+      {/* Main content */}
       {!loading && !error && profile && (
         <>
-          {/* ── Stat cards ─────────────────────────────────────────────────── */}
+          {/* Stat cards */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
             {[
               {
                 icon: '🎯', label: 'Total XP', accent: '#818cf8',
-                value: <CountUp from={prevXp ?? profile.xp} to={profile.xp} duration={900} suffix=" XP" className="text-3xl font-black" />,
+                value: <CountUp from={prevXp ?? profile.xp} to={profile.xp} duration={900} suffix=" XP" className="text-3xl font-black text-indigo-400" />,
                 sub: `${xpToNext} XP to next level`,
                 delay: 0,
               },
@@ -384,7 +192,7 @@ const fetchAll = (userId) => {
                 sub: `Best: ${longestStreak} days`,
                 delay: 150,
               },
-            ].map(({ icon, label, accent, value, sub, delay }) => (
+            ].map(({ icon, label, value, sub, delay }) => (
               <div
                 key={label}
                 className="glow-card bg-slate-800/90 border border-slate-700/80 rounded-xl p-5
@@ -400,11 +208,8 @@ const fetchAll = (userId) => {
               </div>
             ))}
           </div>
-
-          {/* ── XP Progress bar ────────────────────────────────────────────── */}
-          <div
-            className="bg-slate-800/90 border border-slate-700/80 rounded-xl p-5 mb-6 fade-slide-up anim-delay-3"
-          >
+          {/* XP Progress bar */}
+          <div className="bg-slate-800/90 border border-slate-700/80 rounded-xl p-5 mb-6 fade-slide-up anim-delay-3">
             <div className="flex items-center justify-between mb-3">
               <div>
                 <h2 className="text-white font-bold">XP Progress</h2>
@@ -427,10 +232,8 @@ const fetchAll = (userId) => {
               <span className="text-indigo-400 text-xs font-semibold">{profile.xp} XP total</span>
             </div>
           </div>
-
-          {/* ── Badges + Achievements ──────────────────────────────────────── */}
+          {/* Badges + Achievements */}
           <div className="grid md:grid-cols-2 gap-6 mb-6">
-
             {/* Badges */}
             <div className="bg-slate-800/90 border border-slate-700/80 rounded-xl p-5 fade-slide-up anim-delay-4">
               <div className="flex items-center justify-between mb-4">
@@ -461,7 +264,6 @@ const fetchAll = (userId) => {
                 </div>
               )}
             </div>
-
             {/* Achievements */}
             <div className="bg-slate-800/90 border border-slate-700/80 rounded-xl p-5 fade-slide-up anim-delay-5">
               <div className="flex items-center justify-between mb-4">
@@ -481,7 +283,7 @@ const fetchAll = (userId) => {
                 <div className="flex flex-wrap gap-2">
                   {achievements.map((a, i) => (
                     <span
-                      key={a.code}
+                      key={a.code ?? i}
                       title={`${a.description ?? ''}`}
                       className="badge-unlocked cursor-help"
                       style={{
@@ -498,8 +300,7 @@ const fetchAll = (userId) => {
               )}
             </div>
           </div>
-
-          {/* ── Financial Score + Daily Goal ───────────────────────────────── */}
+          {/* Financial Score + Daily Goal */}
           <div className="grid md:grid-cols-2 gap-6">
             <div className="bg-slate-800/90 border border-slate-700/80 rounded-xl p-5 fade-slide-up anim-delay-5">
               <h2 className="text-white font-bold mb-4">💹 Financial Score</h2>
@@ -528,7 +329,6 @@ const fetchAll = (userId) => {
                  '💪 Keep learning to improve your score!'}
               </p>
             </div>
-
             <div className="bg-slate-800/90 border border-slate-700/80 rounded-xl p-5 fade-slide-up anim-delay-6">
               <h2 className="text-white font-bold mb-4">📅 Daily Goals</h2>
               <div className="space-y-3">
@@ -563,70 +363,6 @@ const fetchAll = (userId) => {
                     </span>
                   </div>
                 ))}
-=======
-      {/* ── Main content ─────────────────────────────────────────────────────── */}
-      {!loading && !error && profile && (
-        <>
-          {/* Stat cards — XP, Level, Financial Score */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
-            <StatCard icon="🎯" label="Total XP"
-              value={`${profile.xp} XP`}
-              sub={`${xpRemaining} XP to next level`}
-              accent="text-indigo-400" />
-            <StatCard icon="⚡" label="Current Level"
-              value={`Level ${profile.level}`}
-              sub="Keep completing quizzes!"
-              accent="text-amber-400" />
-            <StatCard icon="💹" label="Financial Score"
-              value={profile.financialScore}
-              sub="Out of 100"
-              accent="text-emerald-400" />
-          </div>
-
-          {/* XP Progress bar */}
-          <div className="bg-slate-800 border border-slate-700 rounded-xl p-5 mb-8">
-            <div className="flex items-center justify-between mb-3">
-              <h2 className="text-white font-semibold">XP Progress</h2>
-              <span className="text-slate-400 text-sm">
-                {xpRemaining} XP to Level {profile.level + 1}
-              </span>
-            </div>
-            <ProgressBar value={profile.xp} max={xpMax} label={`Level ${profile.level}`} />
-          </div>
-
-          {/* Achievements + Chart row */}
-          <div className="grid md:grid-cols-2 gap-6">
-
-            {/* Achievements — real data from GET /api/achievements */}
-            <div className="bg-slate-800 border border-slate-700 rounded-xl p-5">
-              <h2 className="text-white font-semibold mb-4">🏅 Achievements</h2>
-              {achievements.length === 0 ? (
-                <p className="text-slate-500 text-sm">
-                  Complete quizzes and simulations to earn badges!
-                </p>
-              ) : (
-                <div className="flex flex-wrap gap-2">
-                  {achievements.map((a) => (
-                    <span key={a.id}
-                      className="bg-indigo-900/60 border border-indigo-500/40
-                                 text-indigo-300 text-xs px-3 py-1.5 rounded-full">
-                      🏅 {a.badgeName}
-                    </span>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* Chart placeholder */}
-            <div className="bg-slate-800 border border-slate-700 rounded-xl p-5">
-              <h2 className="text-white font-semibold mb-4">📈 Investment Growth</h2>
-              <div className="w-full h-40 bg-slate-700/50 rounded-lg border border-slate-600
-                              flex items-center justify-center">
-                <div className="text-center">
-                  <div className="text-3xl mb-2">📊</div>
-                  <p className="text-slate-400 text-sm">Chart coming soon</p>
-                </div>
->>>>>>> 348c16528166ec8e809d2b70a1061f3f9b6aa577
               </div>
             </div>
           </div>

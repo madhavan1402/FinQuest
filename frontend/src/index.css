@@ -1,6 +1,4 @@
 @import "tailwindcss";
-
-<<<<<<< HEAD
 /* ══════════════════════════════════════════════════════════
    FinQuest Design System — CSS Variables
 ══════════════════════════════════════════════════════════ */
@@ -11,32 +9,27 @@
   --color-success:   #10b981;
   --color-danger:    #ef4444;
   --color-warning:   #f59e0b;
-
   --radius-sm:  8px;
   --radius-md:  12px;
   --radius-lg:  16px;
   --radius-xl:  20px;
   --radius-2xl: 24px;
-
   --shadow-glow-indigo: 0 0 24px rgba(99,102,241,0.25);
   --shadow-glow-violet: 0 0 24px rgba(139,92,246,0.25);
   --shadow-glow-amber:  0 0 24px rgba(245,158,11,0.25);
   --shadow-glow-green:  0 0 24px rgba(16,185,129,0.25);
   --shadow-card: 0 4px 24px rgba(2,6,23,0.5);
   --shadow-card-hover: 0 8px 40px rgba(2,6,23,0.7);
-
   --transition-fast:   150ms ease;
   --transition-normal: 250ms ease;
   --transition-slow:   400ms ease;
 }
-
 /* ══════════════════════════════════════════════════════════
    Base
 ══════════════════════════════════════════════════════════ */
 *, *::before, *::after {
   box-sizing: border-box;
 }
-
 body {
   background-color: #0f172a;
   color: #f1f5f9;
@@ -44,7 +37,6 @@ body {
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
 }
-
 /* Reduced motion — respect user preference */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
@@ -53,7 +45,6 @@ body {
     transition-duration: 0.01ms !important;
   }
 }
-
 /* ══════════════════════════════════════════════════════════
    Card System
 ══════════════════════════════════════════════════════════ */
@@ -66,12 +57,10 @@ body {
               box-shadow var(--transition-normal),
               transform var(--transition-normal);
 }
-
 .fq-card:hover {
   border-color: rgba(99, 102, 241, 0.4);
   box-shadow: var(--shadow-glow-indigo), var(--shadow-card-hover);
 }
-
 .glow-card {
   box-shadow: 0 0 20px rgba(99, 102, 241, 0.12);
   transition: box-shadow var(--transition-normal), transform var(--transition-normal);
@@ -79,7 +68,6 @@ body {
 .glow-card:hover {
   box-shadow: 0 0 32px rgba(99, 102, 241, 0.3);
 }
-
 /* ══════════════════════════════════════════════════════════
    Button System
 ══════════════════════════════════════════════════════════ */
@@ -112,7 +100,6 @@ body {
   opacity: 0.5;
   cursor: not-allowed;
 }
-
 .btn-secondary {
   display: inline-flex;
   align-items: center;
@@ -137,60 +124,23 @@ body {
 .btn-secondary:active:not(:disabled) {
   transform: translateY(0);
 }
-
 /* ══════════════════════════════════════════════════════════
    XP / Progress Bars
 ══════════════════════════════════════════════════════════ */
-=======
-/* ── Custom CSS variables for the FinQuest game theme ── */
-:root {
-  --color-primary:   #6366f1; /* indigo  */
-  --color-secondary: #8b5cf6; /* violet  */
-  --color-accent:    #f59e0b; /* amber   */
-  --color-success:   #10b981; /* emerald */
-  --color-danger:    #ef4444; /* red     */
-}
-
-/* Smooth page transitions */
-* {
-  transition: background-color 0.2s ease, border-color 0.2s ease;
-}
-
-body {
-  background-color: #0f172a; /* slate-900 — dark game background */
-  color: #f1f5f9;
-  font-family: 'Inter', system-ui, sans-serif;
-  min-height: 100vh;
-}
-
-/* Glowing card effect used on stat and level cards */
-.glow-card {
-  box-shadow: 0 0 20px rgba(99, 102, 241, 0.15);
-}
-
-.glow-card:hover {
-  box-shadow: 0 0 30px rgba(99, 102, 241, 0.35);
-}
-
 /* XP bar gradient */
->>>>>>> 348c16528166ec8e809d2b70a1061f3f9b6aa577
 .xp-bar {
   background: linear-gradient(90deg, #6366f1, #8b5cf6, #f59e0b);
 }
-
-<<<<<<< HEAD
 .progress-track {
   background: rgba(51, 65, 85, 0.8);
   border-radius: 99px;
   overflow: hidden;
 }
-
 .progress-fill-animated {
   height: 100%;
   border-radius: inherit;
   transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
 }
-
 /* ══════════════════════════════════════════════════════════
    Badge System
 ══════════════════════════════════════════════════════════ */
@@ -211,7 +161,6 @@ body {
   transform: translateY(-2px);
   box-shadow: 0 4px 16px rgba(139,92,246,0.3);
 }
-
 .badge-locked {
   background: rgba(30, 41, 59, 0.6);
   border: 1px solid rgba(51, 65, 85, 0.6);
@@ -225,42 +174,34 @@ body {
   gap: 6px;
   filter: grayscale(0.8);
 }
-
 /* ══════════════════════════════════════════════════════════
    Keyframe Animations
 ══════════════════════════════════════════════════════════ */
-
 /* Entrance animations */
 @keyframes fadeIn {
   from { opacity: 0; }
   to   { opacity: 1; }
 }
-
 @keyframes fadeSlideUp {
   from { opacity: 0; transform: translateY(20px); }
   to   { opacity: 1; transform: translateY(0); }
 }
-
 @keyframes fadeSlideDown {
   from { opacity: 0; transform: translateX(-50%) translateY(-16px); }
   to   { opacity: 1; transform: translateX(-50%) translateY(0); }
 }
-
 @keyframes scaleIn {
   from { opacity: 0; transform: scale(0.85); }
   to   { opacity: 1; transform: scale(1); }
 }
-
 @keyframes slideInRight {
   from { opacity: 0; transform: translateX(40px); }
   to   { opacity: 1; transform: translateX(0); }
 }
-
 @keyframes slideInLeft {
   from { opacity: 0; transform: translateX(-40px); }
   to   { opacity: 1; transform: translateX(0); }
 }
-
 /* Toast */
 @keyframes toastIn {
   from { opacity: 0; transform: translateY(-20px) scale(0.95); }
@@ -270,7 +211,6 @@ body {
   from { opacity: 1; transform: translateY(0) scale(1); }
   to   { opacity: 0; transform: translateY(-12px) scale(0.95); }
 }
-
 /* Badge pop */
 @keyframes badge-pop {
   0%   { transform: scale(0.6); opacity: 0; }
@@ -279,20 +219,17 @@ body {
   100% { transform: scale(1); opacity: 1; }
 }
 .badge-pop { animation: badge-pop 0.5s cubic-bezier(0.34,1.56,0.64,1) forwards; }
-
 /* Badge shine sweep */
 @keyframes shine {
   from { left: -100%; }
   to   { left: 200%; }
 }
-
 /* Glow pulse */
 @keyframes glowPulse {
   0%, 100% { box-shadow: 0 0 12px rgba(99,102,241,0.3); }
   50%       { box-shadow: 0 0 28px rgba(99,102,241,0.7); }
 }
 .glow-pulse { animation: glowPulse 2s ease-in-out infinite; }
-
 /* Flame flicker */
 @keyframes flicker {
   0%, 100% { transform: scaleY(1) scaleX(1); }
@@ -301,7 +238,6 @@ body {
   75%       { transform: scaleY(1.03) scaleX(0.98); }
 }
 .flame { display: inline-block; animation: flicker 0.6s ease-in-out infinite; transform-origin: bottom center; }
-
 /* Shake (quiz fail) */
 @keyframes shake {
   0%, 100% { transform: translateX(0); }
@@ -311,7 +247,6 @@ body {
   80%       { transform: translateX(6px); }
 }
 .shake { animation: shake 0.4s ease; }
-
 /* Bounce in */
 @keyframes bounceIn {
   0%   { transform: scale(0.3); opacity: 0; }
@@ -319,12 +254,10 @@ body {
   70%  { transform: scale(0.9); }
   100% { transform: scale(1); }
 }
-
 /* Confetti fall */
 @keyframes fall {
   to { transform: translateY(110vh) rotate(700deg); opacity: 0; }
 }
-
 /* Stagger entrance helpers */
 .anim-delay-1 { animation-delay: 0.05s; }
 .anim-delay-2 { animation-delay: 0.10s; }
@@ -332,12 +265,10 @@ body {
 .anim-delay-4 { animation-delay: 0.20s; }
 .anim-delay-5 { animation-delay: 0.25s; }
 .anim-delay-6 { animation-delay: 0.30s; }
-
 .fade-slide-up {
   opacity: 0;
   animation: fadeSlideUp 0.4s ease forwards;
 }
-
 /* ══════════════════════════════════════════════════════════
    Skeleton Loader
 ══════════════════════════════════════════════════════════ */
@@ -345,7 +276,6 @@ body {
   0%   { background-position: -400px 0; }
   100% { background-position: 400px 0; }
 }
-
 .skeleton {
   background: linear-gradient(90deg,
     rgba(51,65,85,0.6) 25%,
@@ -356,7 +286,6 @@ body {
   animation: shimmer 1.4s ease-in-out infinite;
   border-radius: var(--radius-md);
 }
-
 /* ══════════════════════════════════════════════════════════
    Level Map
 ══════════════════════════════════════════════════════════ */
@@ -366,11 +295,9 @@ body {
   margin: 0 auto;
   border-radius: 2px;
 }
-
 .level-node-current {
   animation: glowPulse 2s ease-in-out infinite;
 }
-
 /* ══════════════════════════════════════════════════════════
    Quiz Option States
 ══════════════════════════════════════════════════════════ */
@@ -395,14 +322,12 @@ body {
   animation: shake 0.35s ease;
   box-shadow: 0 0 16px rgba(239,68,68,0.3);
 }
-
 /* ══════════════════════════════════════════════════════════
    Leaderboard Podium
 ══════════════════════════════════════════════════════════ */
 .podium-1 { background: linear-gradient(135deg, rgba(245,158,11,0.15), rgba(251,191,36,0.08)); border-color: rgba(245,158,11,0.5); }
 .podium-2 { background: linear-gradient(135deg, rgba(148,163,184,0.12), rgba(100,116,139,0.08)); border-color: rgba(148,163,184,0.4); }
 .podium-3 { background: linear-gradient(135deg, rgba(180,83,9,0.12), rgba(146,64,14,0.08)); border-color: rgba(180,83,9,0.4); }
-
 /* ══════════════════════════════════════════════════════════
    Confetti Layer (LearningPath)
 ══════════════════════════════════════════════════════════ */
@@ -414,7 +339,6 @@ body {
 }
 .confetti-layer i:nth-child(3n) { background: var(--color-success); }
 .confetti-layer i:nth-child(4n) { background: var(--color-primary); }
-
 /* ══════════════════════════════════════════════════════════
    LearningPath (preserve existing CSS)
 ══════════════════════════════════════════════════════════ */
@@ -429,7 +353,6 @@ body {
 .achievement-popup span { font-size: 30px; }
 .achievement-popup p { margin: 3px 0 0; color: #c7d2fe; }
 .achievement-popup button { border: 0; background: none; color: #fff; font-size: 24px; cursor: pointer; }
-
 /* ══════════════════════════════════════════════════════════
    Scrollbar
 ══════════════════════════════════════════════════════════ */
@@ -437,27 +360,10 @@ body {
 ::-webkit-scrollbar-track { background: #0f172a; }
 ::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: #475569; }
-
 /* ══════════════════════════════════════════════════════════
    Focus visible (accessibility)
 ══════════════════════════════════════════════════════════ */
 :focus-visible {
   outline: 2px solid var(--color-primary);
   outline-offset: 2px;
-=======
-/* Animated pulse for new badge */
-@keyframes badge-pop {
-  0%   { transform: scale(0.8); opacity: 0; }
-  70%  { transform: scale(1.1); }
-  100% { transform: scale(1);   opacity: 1; }
-}
-.badge-pop {
-  animation: badge-pop 0.4s ease forwards;
-}
-
-/* Toast slide-down from top */
-@keyframes fadeSlideDown {
-  from { opacity: 0; transform: translateX(-50%) translateY(-16px); }
-  to   { opacity: 1; transform: translateX(-50%) translateY(0);     }
->>>>>>> 348c16528166ec8e809d2b70a1061f3f9b6aa577
 }

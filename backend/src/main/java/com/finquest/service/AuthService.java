@@ -67,7 +67,7 @@ public class AuthService {
         user.setEmail(request.getEmail().toLowerCase().trim());
         user.setPassword(passwordEncoder.encode(request.getPassword()));
         user.setRole(Role.USER);              // all sign-ups are regular users
-        user.setEmailVerified(false);
+        user.setEmailVerified(devMode());
 
         // Gamification defaults (mirror existing behaviour).
         user.setXp(0);
@@ -94,9 +94,10 @@ public class AuthService {
                 + "— FinQuest Team",
             devMode());
 
-        // Do not auto-login — the user must verify first.
-        return toResponse("Registration successful. Please verify your email before logging in.",
-                user, null, null);
+        String accessToken = devMode() ? jwtService.generateAccessToken(user) : null;
+        String refreshToken = devMode() ? createRefreshToken(user) : null;
+        String message = devMode() ? "Registration successful" : "Registration successful. Please verify your email before logging in.";
+        return toResponse(message, user, accessToken, refreshToken);
     }
 
     // ── Login ────────────────────────────────────────────────────────────────

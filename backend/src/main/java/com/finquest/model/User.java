@@ -3,11 +3,8 @@ package com.finquest.model;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-<<<<<<< HEAD
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-=======
->>>>>>> 348c16528166ec8e809d2b70a1061f3f9b6aa577
 
 // @Entity  — marks this class as a JPA-managed database table
 // @Table   — maps to the "users" table in MySQL
@@ -37,8 +34,7 @@ public class User {
     @Column(nullable = false, unique = true, length = 150)
     private String email;
 
-<<<<<<< HEAD
-// BCrypt-hashed password — plain text is NEVER stored
+    // BCrypt-hashed password — plain text is NEVER stored
     @Column(nullable = false)
     private String password;
 
@@ -68,12 +64,6 @@ public class User {
     // Expiry of the password-reset link (e.g. 30 min from issue).
     private LocalDateTime resetExpiry;
 
-=======
-    // BCrypt-hashed password — plain text is NEVER stored
-    @Column(nullable = false)
-    private String password;
-
->>>>>>> 348c16528166ec8e809d2b70a1061f3f9b6aa577
     // ── Gamification fields ───────────────────────────────────────────────────
 
     // Total XP accumulated across quizzes and simulations
@@ -88,7 +78,6 @@ public class User {
     @Column(nullable = false)
     private int financialScore = 0;
 
-<<<<<<< HEAD
     @Column(nullable = false)
     private int coins = 0;
 
@@ -97,9 +86,6 @@ public class User {
 
     private LocalDate lastLearningDate;
 
-    // ── AI fields ─────────────────────────────────────────────────────────────
-
-=======
     // ── AI fields ─────────────────────────────────────────────────────────────
 
     // Predicted by the literacy model: Beginner / Intermediate / Advanced
@@ -114,5 +100,4 @@ public class User {
     // Required by AIService.predict() — was missing, causing setRiskProfile() error
     @Column(length = 20)
     private String riskProfile = "Moderate";
->>>>>>> 348c16528166ec8e809d2b70a1061f3f9b6aa577
 }

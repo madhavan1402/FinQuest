@@ -43,9 +43,11 @@ public class JwtService {
         return buildToken(claims, user.getId(), accessExpirationMs);
     }
 
-    /** Builds a refresh token carrying only the user id (no role). */
+    /** Builds a refresh token carrying only the user id and a unique token ID. */
     public String generateRefreshToken(User user) {
-        return buildToken(new HashMap<>(), user.getId(), refreshExpirationMs);
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("jti", java.util.UUID.randomUUID().toString());
+        return buildToken(claims, user.getId(), refreshExpirationMs);
     }
 
     private String buildToken(Map<String, Object> extraClaims, Long userId, long expirationMs) {

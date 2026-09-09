@@ -18,10 +18,14 @@ export default function Register() {
     setLoading(true);
     try {
       const { data } = await register(form);
-      saveUser(data);
-      navigate('/dashboard');
+      if (data?.accessToken) {
+        saveUser(data);
+        navigate('/dashboard');
+      } else {
+        navigate('/login');
+      }
     } catch (err) {
-      setError(err.response?.data?.message || 'Registration failed. Try again.');
+      setError(err.response?.data?.message || err.response?.data?.error || 'Registration failed. Try again.');
     } finally {
       setLoading(false);
     }

@@ -3,10 +3,7 @@ package com.finquest.service;
 import com.finquest.dto.BudgetRequest;
 import com.finquest.dto.StockRequest;
 import com.finquest.dto.TaxRequest;
-<<<<<<< HEAD
 import com.finquest.dto.XpResultDto;
-=======
->>>>>>> 348c16528166ec8e809d2b70a1061f3f9b6aa577
 import com.finquest.model.Simulation;
 import com.finquest.model.SimulationType;
 import com.finquest.model.User;
@@ -143,17 +140,12 @@ public class SimulationService {
         simulationRepository.save(sim);
 
         // XP = score (budget/tax) or score (stock) — already 0–100
-<<<<<<< HEAD
         XpResultDto xpResult = levelService.awardXp(user.getId(), score);
-=======
-        Map<String, Object> xpResult = levelService.awardXp(user.getId(), score);
->>>>>>> 348c16528166ec8e809d2b70a1061f3f9b6aa577
 
         Map<String, Object> response = new HashMap<>();
         response.put("simulationType", type);
         response.put("result",         resultText);
         response.put("score",          score);
-<<<<<<< HEAD
         // Merges the XP/gamification fields into the response.
         // (XpResultDto is a typed DTO, not a Map — extract fields explicitly.)
         response.put("xp",              xpResult.getXp());
@@ -162,9 +154,6 @@ public class SimulationService {
         response.put("xpEarned",        xpResult.getXpEarned());
         response.put("xpToNextLevel",   xpResult.getXpToNextLevel());
         response.put("badgeAwarded",    xpResult.getBadgeAwarded());
-=======
-        response.putAll(xpResult); // merges xp, level, leveledUp, xpToNextLevel, badgeAwarded
->>>>>>> 348c16528166ec8e809d2b70a1061f3f9b6aa577
         return response;
     }
 

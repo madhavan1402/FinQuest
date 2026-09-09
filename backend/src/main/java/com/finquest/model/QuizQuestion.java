@@ -38,8 +38,7 @@ public class QuizQuestion {
     @Column(name = "correct_answer", nullable = false, length = 1)
     private String correctAnswer;
 
-<<<<<<< HEAD
-// Links the question to a game level (1, 2, 3 …) — the learning level number
+    // Links the question to a game level (1, 2, 3 …) — the learning level number
     @Column(nullable = false)
     private int level;
 
@@ -62,10 +61,4 @@ public class QuizQuestion {
 
     @Column(nullable = false)
     private boolean active = true;
-=======
-    // Links the question to a game level (1, 2, 3 …)
-    // GET /api/quiz/{level} filters by this field
-    @Column(nullable = false)
-    private int level;
->>>>>>> 348c16528166ec8e809d2b70a1061f3f9b6aa577
 }
