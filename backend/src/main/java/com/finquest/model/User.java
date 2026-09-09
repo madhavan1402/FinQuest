@@ -100,4 +100,8 @@ public class User {
     // Required by AIService.predict() — was missing, causing setRiskProfile() error
     @Column(length = 20)
     private String riskProfile = "Moderate";
+
+    // Financial Onboarding Assessment completed flag
+    @Column(nullable = false)
+    private boolean assessmentCompleted = false;
 }

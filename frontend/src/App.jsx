@@ -5,6 +5,7 @@ import Navbar        from './components/Navbar';
 import Login         from './pages/Login';
 import Register      from './pages/Register';
 import Dashboard     from './pages/Dashboard';
+import Assessment    from './pages/Assessment';
 import Levels        from './pages/Levels';
 import LearningPath  from './pages/LearningPath';
 import Quiz          from './pages/Quiz';
@@ -49,6 +50,7 @@ export default function App() {
           <Route path="/register" element={<Register />} />
 
           {/* Protected */}
+          <Route path="/assessment"    element={<ProtectedRoute><Assessment /></ProtectedRoute>} />
           <Route path="/dashboard"    element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
           <Route path="/levels"       element={<ProtectedRoute><Levels /></ProtectedRoute>} />
           <Route path="/learning-path" element={<ProtectedRoute><LearningPath /></ProtectedRoute>} />

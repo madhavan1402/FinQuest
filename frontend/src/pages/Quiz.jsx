@@ -157,13 +157,23 @@ export default function Quiz() {
             .then(({ data: legacy }) => {
               if (!legacy || legacy.length === 0) applyFallback();
               else {
-                setQuestions(legacy);
+                const normalized = legacy.map(q => ({
+                  ...q,
+                  id: q.questionId ?? q.id,
+                  question: q.questionText ?? q.question,
+                }));
+                setQuestions(normalized);
                 setPhase('active');
               }
             })
             .catch(() => applyFallback());
         } else {
-          setQuestions(data);
+          const normalized = data.map(q => ({
+            ...q,
+            id: q.questionId ?? q.id,
+            question: q.questionText ?? q.question,
+          }));
+          setQuestions(normalized);
           setPhase('active');
         }
       })
@@ -189,41 +199,25 @@ export default function Quiz() {
     setPhase('submitting');
 
     try {
-      let data;
       if (usingFallback) {
-        const correctCount = questions.filter(
-          (q) => q.correctAnswer && answers[String(q.id)] === q.correctAnswer
-        ).length;
-        const total = questions.length || 1;
-        const passed = (correctCount / total) >= 0.7;
+        // Do NOT fabricate XP, coins, or completion — the backend must handle scoring.
+        setErrorMsg('This quiz requires a server connection to submit. Please ensure the backend is running and try again.');
+        setPhase('active');
+        return;
+      }
 
-        data = {
-          score: correctCount,
-          totalQuestions: total,
-          percentage: Math.round((correctCount / total) * 100),
-          passed,
-          xpEarned: passed ? 100 : 25,
-          coinsEarned: passed ? 50 : 10,
-          level: user?.level ?? 1,
-          currentXp: (user?.xp ?? 0) + (passed ? 100 : 25),
-          xpToNextLevel: 100,
-          leveledUp: false,
-          badgesAwarded: [],
-          achievementsUnlocked: [],
-        };
-      } else {
-        const answersMap = {};
-        questions.forEach((q) => {
-          answersMap[String(q.id)] = answers[String(q.id)];
-        });
+      let data;
+      const answersMap = {};
+      questions.forEach((q) => {
+        answersMap[String(q.id)] = answers[String(q.id)];
+      });
 
-        try {
-          const res = await submitLevelQuiz(quizLevel, answersMap);
-          data = res.data;
-        } catch {
-          const legacy = await submitQuiz({ level: quizLevel, answers: answersMap });
-          data = legacy.data;
-        }
+      try {
+        const res = await submitLevelQuiz(quizLevel, answersMap);
+        data = res.data;
+      } catch {
+        const legacy = await submitQuiz({ level: quizLevel, answers: answersMap });
+        data = legacy.data;
       }
 
       setResult(data);

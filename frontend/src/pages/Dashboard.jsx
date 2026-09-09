@@ -123,19 +123,63 @@ export default function Dashboard() {
           </h1>
           <p className="text-slate-400 text-sm mt-1">Here is your financial learning overview</p>
         </div>
-        {curStreak > 0 && (
-          <div className="flex items-center gap-2 bg-slate-800/80 border border-orange-500/30 px-4 py-2 rounded-2xl flex-shrink-0">
-            <span className="text-2xl flame">🔥</span>
-            <div>
-              <p className="text-orange-400 font-bold text-sm leading-none">{curStreak}-Day Streak</p>
-              <p className="text-slate-500 text-[11px] mt-0.5">Keep learning daily!</p>
+        <div className="flex items-center gap-3 flex-wrap flex-shrink-0">
+          {curStreak > 0 && (
+            <div className="flex items-center gap-2 bg-slate-800/80 border border-orange-500/30 px-4 py-2 rounded-2xl">
+              <span className="text-2xl flame">🔥</span>
+              <div>
+                <p className="text-orange-400 font-bold text-sm leading-none">{curStreak}-Day Streak</p>
+                <p className="text-slate-500 text-[11px] mt-0.5">Keep learning daily!</p>
+              </div>
+              {longestStreak > curStreak && (
+                <span className="text-slate-500 text-xs">Best: {longestStreak}</span>
+              )}
             </div>
-            {longestStreak > curStreak && (
-              <span className="text-slate-500 text-xs">Best: {longestStreak}</span>
-            )}
-          </div>
-        )}
+          )}
+          {/* Literacy Level Badge */}
+          {profile?.literacyLevel && (
+            <div className={`flex items-center gap-2 px-3 py-1.5 rounded-2xl border text-xs font-bold ${
+              profile.literacyLevel === 'ADVANCED'
+                ? 'bg-emerald-900/40 border-emerald-500/40 text-emerald-300'
+                : profile.literacyLevel === 'INTERMEDIATE'
+                ? 'bg-amber-900/40 border-amber-500/40 text-amber-300'
+                : 'bg-indigo-900/40 border-indigo-500/40 text-indigo-300'
+            }`}>
+              <span>🎓</span>
+              <span>{profile.literacyLevel}</span>
+            </div>
+          )}
+        </div>
       </div>
+
+      {/* Assessment Banner — shown if not yet taken (shouldn't normally appear due to routing, but safe fallback) */}
+      {!profile?.assessmentCompleted && (
+        <div className="bg-indigo-950/60 border border-indigo-500/40 rounded-xl p-5 mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 fade-slide-up">
+          <div>
+            <p className="text-indigo-300 font-bold flex items-center gap-2">
+              <span>🧭</span> Complete your Financial Assessment
+            </p>
+            <p className="text-slate-400 text-xs mt-0.5">Get a personalized learning path tailored to your financial baseline.</p>
+          </div>
+          <a href="/assessment" className="btn-primary px-5 py-2 rounded-xl text-sm font-bold flex-shrink-0">
+            Start Assessment →
+          </a>
+        </div>
+      )}
+
+      {/* Retake Assessment Link — shown when assessment is already completed */}
+      {profile?.assessmentCompleted && (
+        <div className="bg-slate-800/40 border border-slate-700/50 rounded-xl px-5 py-3 mb-6 flex items-center justify-between gap-4 fade-slide-up">
+          <span className="text-slate-400 text-xs">
+            💡 Financial profile: <span className="text-white font-semibold">{profile.literacyLevel ?? '—'}</span>
+            {' · '}
+            <span className="text-slate-500">Risk: {profile.riskProfile ?? '—'}</span>
+          </span>
+          <a href="/assessment" className="text-indigo-400 hover:text-indigo-300 text-xs font-semibold transition-colors underline underline-offset-2">
+            Retake Assessment
+          </a>
+        </div>
+      )}
       {/* Loading */}
       {loading && (
         <>

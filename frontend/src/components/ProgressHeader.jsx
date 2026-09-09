@@ -12,7 +12,7 @@ export default function ProgressHeader({ completionPercent, xp, totalXp, level, 
         </div>
         <div className="progress-badges">
           <span className="badge-pill">⭐ {completionPercent}% complete</span>
-          <span className="badge-pill accent">⚡ {totalXp} XP</span>
+          <span className="badge-pill accent">⚡ {earnedXp} XP</span>
         </div>
       </div>
 

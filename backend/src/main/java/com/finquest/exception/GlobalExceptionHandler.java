@@ -1,6 +1,7 @@
 package com.finquest.exception;
 
 import com.finquest.common.ApiResponse;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -24,6 +25,7 @@ import java.util.Map;
  * exception raised anywhere in the request pipeline is translated here into a
  * consistent {@link ApiResponse} envelope with the correct HTTP status code.
  */
+@Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
@@ -116,6 +118,7 @@ public class GlobalExceptionHandler {
     // implementation details (stack traces, SQL, class names) are never leaked.
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponse<Void>> handleGeneric(Exception ex) {
+        log.error("Unhandled exception caught by GlobalExceptionHandler: ", ex);
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(ApiResponse.error(500, "An unexpected error occurred"));
     }

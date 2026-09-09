@@ -19,7 +19,12 @@ export default function Login() {
     try {
       const { data } = await login(form);
       saveUser(data); // persist to context + localStorage
-      navigate('/dashboard');
+      // Redirect new/unassessed users to onboarding assessment
+      if (!data.assessmentCompleted) {
+        navigate('/assessment');
+      } else {
+        navigate('/dashboard');
+      }
     } catch (err) {
       setError(err.response?.data?.error || 'Login failed. Check your credentials.');
     } finally {

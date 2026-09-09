@@ -266,7 +266,7 @@ public class AuthService {
     }
 
     private AuthResponse toResponse(String message, User user, String accessToken, String refreshToken) {
-        return new AuthResponse(
+        AuthResponse res = new AuthResponse(
                 message,
                 user.getId(),
                 user.getName(),
@@ -279,6 +279,11 @@ public class AuthService {
                 accessToken,
                 refreshToken
         );
+        res.setLiteracyLevel(user.getLiteracyLevel());
+        res.setRiskProfile(user.getRiskProfile());
+        res.setRecommendation(user.getRecommendation());
+        res.setAssessmentCompleted(user.isAssessmentCompleted());
+        return res;
     }
 
     private String generateRandomCode(int lengthBytes) {

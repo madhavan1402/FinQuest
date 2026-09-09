@@ -404,19 +404,38 @@ public class LearningPathService {
     /**
      * Creates progress rows for any module the user does not yet have progress
      * for. NEVER resets or overwrites existing progress.
-     * Level 1 is unlocked; all others are locked.
+     * <p>
+     * Unlock rules (only applied on initial row creation):
+     * <ul>
+     *   <li>BEGINNER  — Level 1 unlocked, all others locked.</li>
+     *   <li>INTERMEDIATE — Levels 1-13 unlocked (entry point = Level 13), levels 14+ locked.</li>
+     *   <li>ADVANCED  — Levels 1-25 unlocked (entry point = Level 25), levels 26+ locked.</li>
+     * </ul>
+     * No levels are marked completed by this method.
      */
     private void ensureProgress(User user) {
         List<LearningModule> all = modules.findByActiveTrueOrderBySequenceNumberAsc();
+
+        // Determine unlock ceiling based on assessed literacy level
+        String literacy = user.getLiteracyLevel();
+        int unlockUpToSequence;
+        if ("ADVANCED".equalsIgnoreCase(literacy)) {
+            unlockUpToSequence = 25;
+        } else if ("INTERMEDIATE".equalsIgnoreCase(literacy)) {
+            unlockUpToSequence = 13;
+        } else {
+            unlockUpToSequence = 1; // BEGINNER (default)
+        }
+
         for (LearningModule m : all) {
             if (progress.findByUserIdAndLearningModuleId(user.getId(), m.getId()).isPresent()) continue;
             UserProgress p = new UserProgress();
             p.setUser(user);
             p.setLearningModule(m);
-            boolean isFirst = m.getSequenceNumber() == 1;
-            p.setUnlocked(isFirst);
+            boolean unlocked = m.getSequenceNumber() <= unlockUpToSequence;
+            p.setUnlocked(unlocked);
             p.setCompleted(false);
-            p.setStatus(isFirst ? LevelStatus.UNLOCKED : LevelStatus.LOCKED);
+            p.setStatus(unlocked ? LevelStatus.UNLOCKED : LevelStatus.LOCKED);
             progress.save(p);
         }
     }

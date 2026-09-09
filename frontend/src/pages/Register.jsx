@@ -20,7 +20,8 @@ export default function Register() {
       const { data } = await register(form);
       if (data?.accessToken) {
         saveUser(data);
-        navigate('/dashboard');
+        // New users always need assessment first
+        navigate('/assessment');
       } else {
         navigate('/login');
       }

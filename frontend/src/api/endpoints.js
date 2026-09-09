@@ -54,3 +54,8 @@ export const getGamificationProgress = () => api.get('/gamification/progress');
 export const claimDailyReward = () => api.post('/gamification/daily-reward');
 
 export const getAiPrediction = (payload) => api.post('/ai/predict', payload);
+
+// ── Financial Onboarding Assessment (Phase 2) ────────────────────────────────
+export const getAssessmentQuestions = ()        => api.get('/assessment/questions');
+export const submitAssessment        = (payload) => api.post('/assessment/submit', payload);
+export const getAssessmentResult     = ()        => api.get('/assessment/result');
