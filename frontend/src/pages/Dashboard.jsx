@@ -7,7 +7,9 @@ import CountUp from '../components/CountUp';
 import Modal from '../components/Modal';
 import Toast from '../components/Toast';
 import { SkeletonStatCard, SkeletonCard } from '../components/SkeletonCard';
+import MarketOverview from '../components/market/MarketOverview';
 let toastIdCounter = 0;
+
 export default function Dashboard() {
   const { user, saveUser, logout, lastQuizResult } = useAuth();
   const mentor = useMentor();
@@ -292,8 +294,13 @@ export default function Dashboard() {
               <span className="text-indigo-400 text-xs font-semibold">{profile.xp} XP total</span>
             </div>
           </div>
+
+          {/* Real Market Data Infrastructure (Phase 6) */}
+          <MarketOverview />
+
           {/* Badges + Achievements */}
           <div className="grid md:grid-cols-2 gap-6 mb-6">
+
             {/* Badges */}
             <div className="bg-slate-800/90 border border-slate-700/80 rounded-xl p-5 fade-slide-up anim-delay-4">
               <div className="flex items-center justify-between mb-4">

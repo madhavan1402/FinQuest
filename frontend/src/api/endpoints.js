@@ -64,3 +64,10 @@ export const getAssessmentResult     = ()        => api.get('/assessment/result'
 export const mentorChat       = (payload) => api.post('/mentor/chat', payload);
 export const getMentorHealth  = ()        => api.get('/mentor/health');
 
+// ── Market Data Infrastructure (Phase 6) ──────────────────────────────────────
+export const getMarketOverview = ()                    => api.get('/market/overview');
+export const getMarketQuote    = (symbol)              => api.get(`/market/quotes/${symbol}`);
+export const getMarketHistory  = (symbol, timeframe)   => api.get(`/market/history/${symbol}`, { params: { timeframe } });
+export const getMarketStatus   = ()                    => api.get('/market/status');
+
+
