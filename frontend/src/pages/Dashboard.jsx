@@ -8,6 +8,7 @@ import Modal from '../components/Modal';
 import Toast from '../components/Toast';
 import { SkeletonStatCard, SkeletonCard } from '../components/SkeletonCard';
 import MarketOverview from '../components/market/MarketOverview';
+import TradingDashboard from '../components/trading/TradingDashboard';
 let toastIdCounter = 0;
 
 export default function Dashboard() {
@@ -297,6 +298,9 @@ export default function Dashboard() {
 
           {/* Real Market Data Infrastructure (Phase 6) */}
           <MarketOverview />
+
+          {/* Virtual Trading Simulator (Phase 7) */}
+          <TradingDashboard />
 
           {/* Badges + Achievements */}
           <div className="grid md:grid-cols-2 gap-6 mb-6">

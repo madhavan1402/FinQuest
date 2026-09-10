@@ -70,4 +70,10 @@ export const getMarketQuote    = (symbol)              => api.get(`/market/quote
 export const getMarketHistory  = (symbol, timeframe)   => api.get(`/market/history/${symbol}`, { params: { timeframe } });
 export const getMarketStatus   = ()                    => api.get('/market/status');
 
-
+// ── Virtual Trading (Phase 7) ────────────────────────────────────────────────
+export const getTradingWallet       = ()        => api.get('/trading/wallet');
+export const getTradingHoldings     = ()        => api.get('/trading/holdings');
+export const getTradingPortfolio    = ()        => api.get('/trading/portfolio');
+export const getTradingTransactions = ()        => api.get('/trading/transactions');
+export const executeTradingBuy      = (payload) => api.post('/trading/buy', payload);
+export const executeTradingSell     = (payload) => api.post('/trading/sell', payload);
